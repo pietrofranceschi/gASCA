@@ -4,7 +4,7 @@
 \alias{ASCA_validate}
 \title{ASCA_validate}
 \usage{
-ASCA_validate(asca, npermutations = 500)
+ASCA_validate(asca, npermutations = 100, upquantile = 0.95)
 }
 \arguments{
 \item{asca}{the output of the ASCA_decompose}
