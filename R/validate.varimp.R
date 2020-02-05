@@ -43,3 +43,26 @@ ASCA_validate.varimp<-function(asca,
               important.var=obs.varimp)
 }
 
+
+######
+
+
+
+#' Title
+#'
+#' @param asca the output of ASCA_decompose
+#' @param validate.varimp the output of ASCA_validate.varimp
+#' @param var the variable [number] to plot
+#' @param fact the factor [number] to plot
+#'
+#' @return an histogram of the random variable importance values and the location of the observed value
+#' @export
+#'
+#' @examples
+#' 
+plot.validate.varimp<-function(asca, validate.varimp, var, fact){
+  hist(validate.varimp$random_varimp.array[var,fact,], breaks = 30, xlim=c(0,1),
+       main=substitute(paste("Histogram of ", validate.varimp, sep=", ", "variable ", var, sep="_", "factor ", fact)))
+  abline(v=asca$svds$varimp[var,fact], col="red")
+}
+
