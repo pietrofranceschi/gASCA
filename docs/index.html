@@ -74,10 +74,10 @@
 <div id="asca" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
 <a href="#asca" class="anchor"></a>ASCA</h1></div>
-<div id="decription" class="section level2">
+<div id="description" class="section level2">
 <h2 class="hasAnchor">
-<a href="#decription" class="anchor"></a>Decription</h2>
-<p>Implementation of a GLM based Analysis of variance – simultaneous component analysis (ASCA or ANOVA–SCA), particularly focused on the analysis of count data.</p>
+<a href="#description" class="anchor"></a>Description</h2>
+<p>Implementation of a GLM based Analysis of variance – Simultaneous Component Analysis (ASCA or ANOVA–SCA), particularly focused on the analysis of count data.</p>
 </div>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -88,6 +88,12 @@ install.packages("devtools")
 ## install the last version from github
 devtools::install_github("pietrofranceschi/ASCA", build_vignettes=TRUE)
 </a></code></pre>
+</div>
+<div id="details" class="section level2">
+<h2 class="hasAnchor">
+<a href="#details" class="anchor"></a>Details</h2>
+<p>ASCA is a multivariate method which can be used to analyze designed experiments and highlight the variables which are more affecting each specific design factor (<a href="https://en.wikipedia.org/wiki/ANOVA%E2%80%93simultaneous_component_analysis">Wikipedia</a>).</p>
+<p>In the ASCA package implementation the expected values for each factor are estimated trough Generalized Linear Modeling (GLM) this extend the original approach to unbalanced designs and to non normally distributed data like counts.</p>
 </div>
 </div>
   </div>
