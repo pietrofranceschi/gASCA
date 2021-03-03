@@ -85,211 +85,141 @@
 
     
     
-<p>Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The <code>html_vignette</code> output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The <code>html_vignette</code> format:</p>
+<div id="introduction" class="section level2">
+<h2 class="hasAnchor">
+<a href="#introduction" class="anchor"></a>Introduction</h2>
 <ul>
-<li>Never uses retina figures</li>
-<li>Has a smaller default figure size</li>
-<li>Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style</li>
+<li>Visualize the characteristics of Multifactorial designs in multivariate context.</li>
+<li>With standard PCA one focuses on the effect responsible of the larger variance. This does not allow neither to disentagle the contribution of the different design factors nor to pinpoint the variables which are most influential for each factor</li>
+<li>The idea of ASCA is to couple ANOVA decomposition with PCA. ANOVA is used to model each variable as a function of the different elements of the design, PCA is then applied drive a multivariate interpretation of the matrices holding the univariate expected values for each design factor.</li>
+<li>In matrix representation the ASCA decomposition is Y = A + B + C + … + Err where each matrix holds the expected values</li>
+<li>The expected values can be estimated in different way, but using glm to do that has two advantages: the approach can be applied the method to unbalanced designs, one can extend the idea to response variables with non gaussian distribution like the one which are encountered in ecology or metagenomics.</li>
+<li>This second perspective is extremely interesting due to the growing availability of complex ecological and biological datasets</li>
 </ul>
-<div id="vignette-info" class="section level2">
-<h2 class="hasAnchor">
-<a href="#vignette-info" class="anchor"></a>Vignette Info</h2>
-<p>Note the various macros within the <code>vignette</code> section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the <code>title</code> field and the <code>\VignetteIndexEntry</code> to match the title of your vignette.</p>
 </div>
-<div id="styles" class="section level2">
+<div id="the-dataset" class="section level2">
 <h2 class="hasAnchor">
-<a href="#styles" class="anchor"></a>Styles</h2>
-<p>The <code>html_vignette</code> template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:</p>
-<pre><code>output: 
-  rmarkdown::html_vignette:
-    css: mystyles.css</code></pre>
-</div>
-<div id="figures" class="section level2">
-<h2 class="hasAnchor">
-<a href="#figures" class="anchor"></a>Figures</h2>
-<p>The figure sizes have been customised so that you can easily put two images side-by-side.</p>
+<a href="#the-dataset" class="anchor"></a>The dataset</h2>
+<p>To illustrate the usefulness of ASCA in the analysis of count data we will considered a synthetic dataset which is available as a part of the package installation.</p>
+<div id="experimental-design" class="section level3">
+<h3 class="hasAnchor">
+<a href="#experimental-design" class="anchor"></a>Experimental design</h3>
+<ul>
+<li>10 count variables (identified as <code>s1 .. s10</code>)</li>
+<li>2 factor design (5 time points, 3 treatments)</li>
+<li>45 samples</li>
+</ul>
+<p>The synthetic dataset was designed to have 2 latent variables for the time factor and one for the treatment.</p>
+<p>The synthetic dataset is composed by a two element list containing the count matrix <code>synth_count_data$counts</code> and a data frame holding the association between the 45 samples and the design factors (<code>synth_count_data$design</code>)</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## load the library</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">ASCA</span><span class="op">)</span>
+<span class="co">#&gt; Loading required package: parallel</span>
+<span class="co">#&gt; Loading required package: Matrix</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Attaching package: 'ASCA'</span>
+<span class="co">#&gt; The following object is masked from 'package:stats':</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt;     loadings</span>
+
+<span class="co">## load the dataset</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"synth_count_data"</span><span class="op">)</span>
+
+<span class="co">## this show a compat view of the dataset</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">)</span>
+<span class="co">#&gt; List of 2</span>
+<span class="co">#&gt;  $ counts: int [1:45, 1:10] 2 1 1 0 2 0 0 0 0 4 ...</span>
+<span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span>
+<span class="co">#&gt;   .. ..$ : NULL</span>
+<span class="co">#&gt;   .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
+<span class="co">#&gt;  $ design:'data.frame':  45 obs. of  2 variables:</span>
+<span class="co">#&gt;   ..$ time     : chr [1:45] "t1" "t1" "t1" "t1" ...</span>
+<span class="co">#&gt;   ..$ treatment: chr [1:45] "A" "A" "A" "B" ...</span></code></pre></div>
+<p>The following plot shows an example of the distribution of the counts for the first specie as a function of the design factors</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fl">10</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-1-1.png" width="700"><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-1-2.png" width="700"></p>
-<p>You can enable figure captions by <code>fig_caption: yes</code> in YAML:</p>
-<pre><code>output:
-  rmarkdown::html_vignette:
-    fig_caption: yes</code></pre>
-<p>Then you can use the chunk option <code>fig.cap = "Your figure caption."</code> in <strong>knitr</strong>.</p>
+<code class="sourceCode R"><span class="co">## Palette for time factor</span>
+<span class="va">timepal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#e41a1c"</span>,<span class="st">"#377eb8"</span>,<span class="st">"#4daf4a"</span>,<span class="st">"#984ea3"</span>,<span class="st">"#ff7f00"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">timepal</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span><span class="op">)</span>
+
+<span class="co">## point shapes for treatments</span>
+<span class="va">treatpch</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">13</span>,<span class="fl">17</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">treatpch</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span>
+
+
+<span class="co">## plot the trend of the first specie</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, 
+     col <span class="op">=</span> <span class="va">timepal</span><span class="op">[</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span><span class="op">]</span>, 
+     pch <span class="op">=</span> <span class="va">treatpch</span><span class="op">[</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span><span class="op">]</span>, ylab <span class="op">=</span> <span class="st">"Counts"</span>, xlab <span class="op">=</span> <span class="st">"Sample id"</span>, main <span class="op">=</span> <span class="st">"Specie 1"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, pch <span class="op">=</span> <span class="fl">1</span>, col <span class="op">=</span> <span class="va">timepal</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">timepal</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/graphics/legend.html">legend</a></span><span class="op">(</span><span class="st">"bottomright"</span>, pch <span class="op">=</span> <span class="va">treatpch</span>, col <span class="op">=</span> <span class="st">"gray70"</span>, legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">treatpch</span><span class="op">)</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></code></pre></div>
+<div class="figure">
+<img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-2-1.png" alt="Illustration of the effects of the experimental design on the counts of Specie #1" width="700"><p class="caption">
+Illustration of the effects of the experimental design on the counts of Specie #1
+</p>
 </div>
-<div id="more-examples" class="section level2">
+<p>The previous plot clearly shows the non normal distribution of the count data and the effects of the sesign factors (and of their interaction) on the abundances.</p>
+</div>
+</div>
+<div id="performing-the-decomposition" class="section level2">
 <h2 class="hasAnchor">
-<a href="#more-examples" class="anchor"></a>More Examples</h2>
-<p>You can write math expressions, e.g. <span class="math inline">\(Y = X\beta + \epsilon\)</span>, footnotes<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, and tables, e.g. using <code><a href="https://rdrr.io/pkg/knitr/man/kable.html">knitr::kable()</a></code>.</p>
-<table class="table">
-<thead><tr class="header">
-<th align="left"></th>
-<th align="right">mpg</th>
-<th align="right">cyl</th>
-<th align="right">disp</th>
-<th align="right">hp</th>
-<th align="right">drat</th>
-<th align="right">wt</th>
-<th align="right">qsec</th>
-<th align="right">vs</th>
-<th align="right">am</th>
-<th align="right">gear</th>
-<th align="right">carb</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="left">Mazda RX4</td>
-<td align="right">21.0</td>
-<td align="right">6</td>
-<td align="right">160.0</td>
-<td align="right">110</td>
-<td align="right">3.90</td>
-<td align="right">2.620</td>
-<td align="right">16.46</td>
-<td align="right">0</td>
-<td align="right">1</td>
-<td align="right">4</td>
-<td align="right">4</td>
-</tr>
-<tr class="even">
-<td align="left">Mazda RX4 Wag</td>
-<td align="right">21.0</td>
-<td align="right">6</td>
-<td align="right">160.0</td>
-<td align="right">110</td>
-<td align="right">3.90</td>
-<td align="right">2.875</td>
-<td align="right">17.02</td>
-<td align="right">0</td>
-<td align="right">1</td>
-<td align="right">4</td>
-<td align="right">4</td>
-</tr>
-<tr class="odd">
-<td align="left">Datsun 710</td>
-<td align="right">22.8</td>
-<td align="right">4</td>
-<td align="right">108.0</td>
-<td align="right">93</td>
-<td align="right">3.85</td>
-<td align="right">2.320</td>
-<td align="right">18.61</td>
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">4</td>
-<td align="right">1</td>
-</tr>
-<tr class="even">
-<td align="left">Hornet 4 Drive</td>
-<td align="right">21.4</td>
-<td align="right">6</td>
-<td align="right">258.0</td>
-<td align="right">110</td>
-<td align="right">3.08</td>
-<td align="right">3.215</td>
-<td align="right">19.44</td>
-<td align="right">1</td>
-<td align="right">0</td>
-<td align="right">3</td>
-<td align="right">1</td>
-</tr>
-<tr class="odd">
-<td align="left">Hornet Sportabout</td>
-<td align="right">18.7</td>
-<td align="right">8</td>
-<td align="right">360.0</td>
-<td align="right">175</td>
-<td align="right">3.15</td>
-<td align="right">3.440</td>
-<td align="right">17.02</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">3</td>
-<td align="right">2</td>
-</tr>
-<tr class="even">
-<td align="left">Valiant</td>
-<td align="right">18.1</td>
-<td align="right">6</td>
-<td align="right">225.0</td>
-<td align="right">105</td>
-<td align="right">2.76</td>
-<td align="right">3.460</td>
-<td align="right">20.22</td>
-<td align="right">1</td>
-<td align="right">0</td>
-<td align="right">3</td>
-<td align="right">1</td>
-</tr>
-<tr class="odd">
-<td align="left">Duster 360</td>
-<td align="right">14.3</td>
-<td align="right">8</td>
-<td align="right">360.0</td>
-<td align="right">245</td>
-<td align="right">3.21</td>
-<td align="right">3.570</td>
-<td align="right">15.84</td>
-<td align="right">0</td>
-<td align="right">0</td>
-<td align="right">3</td>
-<td align="right">4</td>
-</tr>
-<tr class="even">
-<td align="left">Merc 240D</td>
-<td align="right">24.4</td>
-<td align="right">4</td>
-<td align="right">146.7</td>
-<td align="right">62</td>
-<td align="right">3.69</td>
-<td align="right">3.190</td>
-<td align="right">20.00</td>
-<td align="right">1</td>
-<td align="right">0</td>
-<td align="right">4</td>
-<td align="right">2</td>
-</tr>
-<tr class="odd">
-<td align="left">Merc 230</td>
-<td align="right">22.8</td>
-<td align="right">4</td>
-<td align="right">140.8</td>
-<td align="right">95</td>
-<td align="right">3.92</td>
-<td align="right">3.150</td>
-<td align="right">22.90</td>
-<td align="right">1</td>
-<td align="right">0</td>
-<td align="right">4</td>
-<td align="right">2</td>
-</tr>
-<tr class="even">
-<td align="left">Merc 280</td>
-<td align="right">19.2</td>
-<td align="right">6</td>
-<td align="right">167.6</td>
-<td align="right">123</td>
-<td align="right">3.92</td>
-<td align="right">3.440</td>
-<td align="right">18.30</td>
-<td align="right">1</td>
-<td align="right">0</td>
-<td align="right">4</td>
-<td align="right">4</td>
-</tr>
-</tbody>
-</table>
-<p>Also a quote using <code><a href="https://rdrr.io/r/base/Comparison.html">&gt;</a></code>:</p>
-<blockquote>
-<p>“He who gives up [code] safety for [code] speed deserves neither.” (<a href="https://twitter.com/hadleywickham/status/504368538874703872">via</a>)</p>
-</blockquote>
+<a href="#performing-the-decomposition" class="anchor"></a>Performing the decomposition</h2>
+<p>The function which performs the decomposition is <code>ASCA</code>. The results are organized as an S3 object. To perform the decomposition it is necessary to provide</p>
+<ul>
+<li>a <code>matrix</code> with the counts</li>
+<li>a <code>data.frame</code> with the association between the samples and the design</li>
+<li>a formula (actually a character vector) which specify the form of the decomposition</li>
+<li>a <code>list</code> with the parameters which will be passed to the <code>glm</code> call</li>
+</ul>
+<p>In the case of count data, the glm should be performed by specifying a Poisson family</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">## perform the decomposition</span>
+<span class="va">asca0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA.html">ASCA</a></span><span class="op">(</span>
+  d <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,
+  x <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span>, 
+  f <span class="op">=</span> <span class="st">"time + treatment + time:treatment"</span>,
+  glm_par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html">poisson</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>
+
+
+<span class="va">asca0</span>
+<span class="co">#&gt; ASCA decomposition </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Number of samples  45 </span>
+<span class="co">#&gt; Number of variables 10 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Formula:  time + treatment + time:treatment </span>
+<span class="co">#&gt; Terms: time,treatment,time:treatment,error</span></code></pre></div>
+<p>Some additional details can be obtained by calling the <code>summary</code> method</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">)</span>
+<span class="co">#&gt; ASCA decomposition </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Number of samples  45 </span>
+<span class="co">#&gt; Number of variables 10 </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Formula:  time + treatment + time:treatment </span>
+<span class="co">#&gt; Terms: time,treatment,time:treatment,error</span>
+<span class="co">#&gt; Validation:  FALSE </span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; glm parameters: </span>
+<span class="co">#&gt; $family</span>
+<span class="co">#&gt; </span>
+<span class="co">#&gt; Family: poisson </span>
+<span class="co">#&gt; Link function: log</span></code></pre></div>
+<p>For each one of the decomposition terms (here time, treatment, time:treatment and error) the decomposition will provide loadings, scores and variable importance. The number of components for each factor (i.e. the rank of the corresponding matrix) is determined by the number of levels of the initial design.</p>
+<ul>
+<li>The <strong>loadings</strong> measure the importance of each one of the initial species to each factor of each component</li>
+<li>The <strong>scores</strong>
+</li>
+</ul>
+<p>Loadings, scores and variable importance can be extracted from the asca object by the <code>loadings</code>, <code>scores</code> and <code>varimp</code> methods</p>
 </div>
-<div class="footnotes">
-<hr>
-<ol>
-<li id="fn1"><p>A footnote here.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-</ol>
+<div id="visualizing-the-outcomes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#visualizing-the-outcomes" class="anchor"></a>Visualizing the outcomes</h2>
+</div>
+<div id="validating-the-outcomes" class="section level2">
+<h2 class="hasAnchor">
+<a href="#validating-the-outcomes" class="anchor"></a>Validating the outcomes</h2>
 </div>
   </div>
 

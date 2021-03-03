@@ -2,7 +2,9 @@
 title: "ASCA Decomposition of Synthetic Count Data"
 author: "Pietro Franceschi"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
 vignette: >
   %\VignetteIndexEntry{ASCA Decomposition of Synthetic Count Data}
   %\VignetteEngine{knitr::rmarkdown}
@@ -16,51 +18,107 @@ knitr::opts_chunk$set(
 )
 ```
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+## Introduction
 
--   Never uses retina figures
--   Has a smaller default figure size
--   Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+-   Visualize the characteristics of Multifactorial designs in multivariate context.
+-   With standard PCA one focuses on the effect responsible of the larger variance. This does not allow neither to disentagle the contribution of the different design factors nor to pinpoint the variables which are most influential for each factor
+-   The idea of ASCA is to couple ANOVA decomposition with PCA. ANOVA is used to model each variable as a function of the different elements of the design, PCA is then applied drive a multivariate interpretation of the matrices holding the univariate expected values for each design factor.
+-   In matrix representation the ASCA decomposition is Y = A + B + C + ... + Err where each matrix holds the expected values
+-   The expected values can be estimated in different way, but using glm to do that has two advantages: the approach can be applied the method to unbalanced designs, one can extend the idea to response variables with non gaussian distribution like the one which are encountered in ecology or metagenomics.
+-   This second perspective is extremely interesting due to the growing availability of complex ecological and biological datasets
 
-## Vignette Info
+## The dataset
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+To illustrate the usefulness of ASCA in the analysis of count data we will considered a synthetic dataset which is available as a part of the package installation.
 
-## Styles
+### Experimental design
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+-   10 count variables (identified as `s1 .. s10`)
+-   2 factor design (5 time points, 3 treatments)
+-   45 samples
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+The synthetic dataset was designed to have 2 latent variables for the time factor and one for the treatment.
 
-## Figures
+The synthetic dataset is composed by a two element list containing the count matrix `synth_count_data$counts` and a data frame holding the association between the 45 samples and the design factors (`synth_count_data$design`)
 
-The figure sizes have been customised so that you can easily put two images side-by-side.
+```{r}
+## load the library
+library(ASCA)
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+## load the dataset
+data("synth_count_data")
+
+## this show a compat view of the dataset
+str(synth_count_data)
+
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+The following plot shows an example of the distribution of the counts for the first specie as a function of the design factors
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
+```{r fig.cap= "Illustration of the effects of the experimental design on the counts of Specie #1"}
+## Palette for time factor
+timepal <- c("#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00")
+names(timepal) <- unique(synth_count_data$design$time)
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+## point shapes for treatments
+treatpch <- c(1,13,17)
+names(treatpch) <- unique(synth_count_data$design$treatment)
 
-## More Examples
 
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes[^1], and tables, e.g. using `knitr::kable()`.
+## plot the trend of the first specie
+plot(synth_count_data$counts[,1], 
+     col = timepal[synth_count_data$design$time], 
+     pch = treatpch[synth_count_data$design$treatment], ylab = "Counts", xlab = "Sample id", main = "Specie 1")
+legend("topleft", pch = 1, col = timepal, legend = names(timepal), bty = "n")
+legend("bottomright", pch = treatpch, col = "gray70", legend = names(treatpch), bty = "n")
 
-[^1]: A footnote here.
 
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
 ```
 
-Also a quote using `>`:
+The previous plot clearly shows the non normal distribution of the count data and the effects of the sesign factors (and of their interaction) on the abundances.
 
-> "He who gives up [code] safety for [code] speed deserves neither." ([via](https://twitter.com/hadleywickham/status/504368538874703872))
+## Performing the decomposition
+
+The function which performs the decomposition is `ASCA`. The results are organized as an S3 object. To perform the decomposition it is necessary to provide
+
+-   a `matrix` with the counts
+-   a `data.frame` with the association between the samples and the design
+-   a formula (actually a character vector) which specify the form of the decomposition
+-   a `list` with the parameters which will be passed to the `glm` call
+
+In the case of count data, the glm should be performed by specifying a Poisson family
+
+```{r}
+## perform the decomposition
+asca0 <- ASCA(
+  d = synth_count_data$design,
+  x = synth_count_data$counts, 
+  f = "time + treatment + time:treatment",
+  glm_par = list(family = poisson()))
+
+
+asca0
+```
+
+Some additional details can be obtained by calling the `summary` method
+
+```{r}
+summary(asca0)
+```
+
+For each one of the decomposition terms (here time, treatment, time:treatment and error) the decomposition will provide loadings, scores and variable importance. The number of components for each factor (i.e. the rank of the corresponding matrix) is determined by the number of levels of the initial design. 
+
+* The **loadings** measure the importance of each one of the initial species to each factor of each component
+* The **scores** 
+
+
+Loadings, scores and variable importance can be extracted from the asca object by the `loadings`, `scores` and `varimp` methods 
+
+
+```{r}
+
+```
+
+## Visualizing the outcomes
+
+## Validating the outcomes
