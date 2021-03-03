@@ -3,7 +3,7 @@ Type: Package
 Title: ANOVA – Simultaneous Component Analysis (ASCA)
 Version: 0.1.0
 Authors@R: person("Pietro", "Franceschi", email = "pietro.franceschi@fmach.it",
-                  role = c("aut", "cre"), comment = c(ORCID = "0000-0001-5711-4429")
+                  role = c("aut", "cre"))
 Maintainer: The package maintainer <pietro.franceschi@fmach.it>
 Description: General implementation of ASCA using glm for the matrix decomposition.
 License: GNU General Public License version 3
