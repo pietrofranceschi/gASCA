@@ -3,5 +3,9 @@ pkgdown: 1.6.1
 pkgdown_sha: ~
 articles:
   Asca_dec_count_data: Asca_dec_count_data.html
+<<<<<<< HEAD
 last_built: 2021-03-03T10:58Z
+=======
+last_built: 2021-03-03T10:38Z
+>>>>>>> 514cdd2fc4912982d8d0d1a4be2d6a7ea09fabb1
 
