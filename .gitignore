@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-*.Rmd
+asca_testing.Rmd
+synthetic_dataset.Rmd
 ASCA.Rproj
 .Rbuildignore
