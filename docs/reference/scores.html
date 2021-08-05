@@ -40,7 +40,7 @@
 
 
 <meta property="og:title" content="scores — scores" />
-<meta property="og:description" content="Extract the scores from an `asca` object" />
+<meta property="og:description" content="Generic function to extract scores from R object" />
 
 
 
@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.7</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -121,24 +121,27 @@
     </div>
 
     <div class="ref-description">
-    <p>Extract the scores from an `asca` object</p>
+    <p>Generic function to extract scores from R object</p>
     </div>
 
-    <pre class="usage"><span class='fu'>scores</span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>scores</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>an object of class asca</p></td>
+      <td><p>an object</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>arguments to be passed to methods</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>A list of matrices with the scores of the decomposition. The number of eigenvectors 
-is determined by the number of levels for each factor</p>
+    <p>This is the generic function to extract scores from objects</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

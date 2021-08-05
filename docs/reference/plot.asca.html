@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.7</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -168,7 +168,7 @@
     </tr>
     <tr>
       <th>sort</th>
-      <td><p>should de variable be ordered according to their importance?</p></td>
+      <td><p>should de variable be ordered according to their importance? FALSE by default</p></td>
     </tr>
     <tr>
       <th>validation</th>
@@ -211,8 +211,8 @@ potentially combines the different decomposition terms</p>
  glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>family <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/family.html'>poisson</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
 <span class='op'>)</span>
 
-<span class='co'>## plot the variable importance for the first eigenvector of the "time" term</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>ASCA_test</span>, type <span class='op'>=</span> <span class='st'>"varimp"</span>, term <span class='op'>=</span> <span class='st'>"time"</span>, eig <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
+<span class='co'>## plot the variable importance for the "time" term</span>
+<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>ASCA_test</span>, type <span class='op'>=</span> <span class='st'>"varimp"</span>, term <span class='op'>=</span> <span class='st'>"time"</span><span class='op'>)</span>
 </div><div class='img'><img src='plot.asca-1.png' alt='' width='700' height='433' /></div><div class='input'>  
 <span class='co'>## for the same term, the loadings are instead ...</span>
 <span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>ASCA_test</span>, type <span class='op'>=</span> <span class='st'>"loadings"</span>, term <span class='op'>=</span> <span class='st'>"time"</span>, eig <span class='op'>=</span> <span class='fl'>1</span><span class='op'>)</span>
@@ -245,10 +245,11 @@ potentially combines the different decomposition terms</p>
 <span class='co'>## perform validation</span>
 <span class='va'>ASCA_test_v</span> <span class='op'>&lt;-</span> <span class='fu'><a href='validate.html'>validate</a></span><span class='op'>(</span><span class='va'>ASCA_test</span>,
 turns <span class='op'>=</span> <span class='fl'>100</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; Validation:  jacknifing  turns:  100</div><div class='input'>
+</div><div class='output co'>#&gt; Validation:  jacknifing  turns:  100</div><div class='output co'>#&gt; <span class='error'>Error in vapply(turns, function(t) t$scores[[x]], turns[[1]]$scores[[x]]): values must be length 20,</span>
+#&gt; <span class='error'> but FUN(X[[87]]) result is length 4</span></div><div class='input'>
 <span class='co'>## plot the variable importance with the confidence limits</span>
 <span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>ASCA_test_v</span>, type <span class='op'>=</span> <span class='st'>"varimp"</span>, term <span class='op'>=</span> <span class='st'>"time"</span>, eig <span class='op'>=</span> <span class='fl'>1</span>, validation <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
-</div><div class='img'><img src='plot.asca-4.png' alt='' width='700' height='433' /></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='error'>Error in plot(ASCA_test_v, type = "varimp", term = "time", eig = 1, validation = TRUE): object 'ASCA_test_v' not found</span></div><div class='input'>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

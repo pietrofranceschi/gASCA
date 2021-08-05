@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Synthetic count data — synth_count_data • ASCA</title>
+<title>ASCA_decompose — ASCA_decompose • ASCA</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Synthetic count data — synth_count_data" />
-<meta property="og:description" content="A dataset mimicking the results of a counting experiments of 10 variables over 45 samples." />
+<meta property="og:title" content="ASCA_decompose — ASCA_decompose" />
+<meta property="og:description" content="This function performs the full ASCA decomposition" />
 
 
 
@@ -115,35 +115,78 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Synthetic count data</h1>
+    <h1>ASCA_decompose</h1>
     
-    <div class="hidden name"><code>synth_count_data.Rd</code></div>
+    <div class="hidden name"><code>ASCA_decompose.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>A dataset mimicking the results of a counting experiments of 10 variables over 45 samples.</p>
+    <p>This function performs the full ASCA decomposition</p>
     </div>
 
-    <pre class="usage"><span class='va'>synth_count_data</span></pre>
+    <pre class="usage"><span class='fu'>ASCA_decompose</span><span class='op'>(</span>
+  <span class='va'>d</span>,
+  <span class='va'>x</span>,
+  <span class='va'>f</span>,
+  glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/vector.html'>vector</a></span><span class='op'>(</span>mode <span class='op'>=</span> <span class='st'>"list"</span>, length <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span>,
+  res_type <span class='op'>=</span> <span class='st'>"pearson"</span>
+<span class='op'>)</span></pre>
 
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>d</th>
+      <td><p>a data.frame/matrix with the design</p></td>
+    </tr>
+    <tr>
+      <th>x</th>
+      <td><p>a data.frame/matrix of numeric values to be decomposed</p></td>
+    </tr>
+    <tr>
+      <th>f</th>
+      <td><p>a string holding the formula of the decomposition</p></td>
+    </tr>
+    <tr>
+      <th>glm_par</th>
+      <td><p>a list with the parameters to be passed to the <code>glm</code> call</p></td>
+    </tr>
+    <tr>
+      <th>res_type</th>
+      <td><p>the types of GLM residuals</p></td>
+    </tr>
+    </table>
 
-    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a list with two components:</p><dl>
-  <dt>counts</dt><dd><p>a matrix with the counts (45x10)</p></dd>
-  <dt>design</dt><dd><p>a data.frame with the designh factors</p></dd>
-  ...
-
-</dl>
+    <p>a list with the full outcomes of the decomposition with the following elements</p><ul>
+<li><p>decomposition: the 3D array holding the results of the decomposition</p></li>
+<li><p>deviance: the array containing the deviance of the models</p></li>
+<li><p>glm_par: a list with the parameters used for modeling</p></li>
+<li><p>res_type: the type of residuals</p></li>
+</ul>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Design:</p>
-<p>* 5 timepoints; 
-* 3 treatments ;
-* 3 replicates</p>
-<p>The variables were created from a two latent variable model which were "projected" on the the final variables</p>
+    <p>The ASCA decomposition of a data matrix is performed by using Generalized Linear Models to perform
+the estimation of the expected values. The use of GLM's allows the extension of the method to non normal data
+and unbalanced designs.
+This function performs only the decomposition without the SVD, which have to be performed by <code>ASCA_svd</code></p>
 
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='co'>## load the data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"synth_count_data"</span><span class='op'>)</span>
+
+<span class='co'>## perform the ASCA decomposition</span>
+<span class='va'>ASCA_test</span> <span class='op'>&lt;-</span> <span class='fu'>ASCA_decompose</span><span class='op'>(</span>
+d <span class='op'>=</span> <span class='va'>synth_count_data</span><span class='op'>$</span><span class='va'>design</span>,
+x <span class='op'>=</span> <span class='va'>synth_count_data</span><span class='op'>$</span><span class='va'>counts</span>, 
+f <span class='op'>=</span> <span class='st'>"time + treatment + time:treatment"</span>,
+glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>family <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/family.html'>poisson</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
+<span class='op'>)</span>
+
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

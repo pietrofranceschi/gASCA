@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.7</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -124,13 +124,14 @@
     <p>This function performs the full ASCA decomposition and acts as a constructor of the ASCA S3 object</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ASCA</span><span class='op'>(</span><span class='va'>d</span>, <span class='va'>x</span>, <span class='va'>f</span>, comb <span class='op'>=</span> <span class='cn'>NULL</span>, glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/vector.html'>vector</a></span><span class='op'>(</span>mode <span class='op'>=</span> <span class='st'>"list"</span>, length <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span><span class='op'>)</span>
-
-<span class='co'># S3 method for asca</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span>
-
-<span class='co'># S3 method for asca</span>
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>x</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>ASCA</span><span class='op'>(</span>
+  <span class='va'>d</span>,
+  <span class='va'>x</span>,
+  <span class='va'>f</span>,
+  comb <span class='op'>=</span> <span class='cn'>NULL</span>,
+  glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/vector.html'>vector</a></span><span class='op'>(</span>mode <span class='op'>=</span> <span class='st'>"list"</span>, length <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span>,
+  res_type <span class='op'>=</span> <span class='st'>"pearson"</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -155,6 +156,10 @@
       <th>glm_par</th>
       <td><p>a list with the parameters to be passed to the <code>glm</code> call</p></td>
     </tr>
+    <tr>
+      <th>res_type</th>
+      <td><p>the "type" of the residuals (see Details)</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -170,12 +175,14 @@
     <p>The ASCA decomposition of a data matrix is performed by using Generalized Linear Models to perform
 the estimation of the expected values. the use of GLM's allows the extension of the method to non normal data
 and unbalanced designs</p>
+<p><code>glm</code> function is also used to calculate the matrix of the residuals. For the available choices refer to the <code>residuals.glm</code> help.
+"Pearson" residuals are calculated by default.</p>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p>There are specific methods to handle and extract information from the <code>asca</code> object</p><ul>
 <li><p><code>print</code></p></li>
 <li><p><code>summary</code></p></li>
-<li><p><a href='scores.html'>scores</a></p></li>
+<li><p><a href='scores.asca.html'>scores.asca</a></p></li>
 <li><p><a href='loadings.html'>loadings</a></p></li>
 <li><p><a href='varimp.html'>varimp</a></p></li>
 <li><p><a href='plot.asca.html'>plot.asca</a></p></li>

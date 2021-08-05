@@ -73,7 +73,7 @@ of an ASCA decomposition in terms of loadings and variable importance" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.7</span>
       </span>
     </div>
 
@@ -81,7 +81,7 @@ of an ASCA decomposition in terms of loadings and variable importance" />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -137,7 +137,7 @@ of an ASCA decomposition in terms of loadings and variable importance</p>
     </tr>
     <tr>
       <th>method</th>
-      <td><p>A character vector which specify the type of validation strategy. Either "jacknifing" (the default) or
+      <td><p>A string which specify the type of validation strategy. Either "jacknifing" (the default) or
 "bootstrap".</p></td>
     </tr>
     <tr>
@@ -151,6 +151,10 @@ of an ASCA decomposition in terms of loadings and variable importance</p>
     <tr>
       <th>qt</th>
       <td><p>A vector with the quantiles which will be calculated on the resamplings</p></td>
+    </tr>
+    <tr>
+      <th>scores_type</th>
+      <td><p>a string specifying if the scores should be calculates in the "link" or "response" space</p></td>
     </tr>
     </table>
 
@@ -179,7 +183,8 @@ glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/ba
 <span class='va'>ASCA_test_v</span> <span class='op'>&lt;-</span> <span class='fu'>validate</span><span class='op'>(</span><span class='va'>ASCA_test</span>,
 turns <span class='op'>=</span> <span class='fl'>100</span>,
 <span class='op'>)</span>
-</div><div class='output co'>#&gt; Validation:  jacknifing  turns:  100</div><div class='input'>
+</div><div class='output co'>#&gt; Validation:  jacknifing  turns:  100</div><div class='output co'>#&gt; <span class='error'>Error in vapply(turns, function(t) t$scores[[x]], turns[[1]]$scores[[x]]): values must be length 20,</span>
+#&gt; <span class='error'> but FUN(X[[4]]) result is length 4</span></div><div class='input'>
 <span class='co'>## the results are included in the asca object inside the validation element</span>
 
 </div></pre>
