@@ -9,11 +9,17 @@
 
 ASCA_svd_engine <- function(a) {
   rk <- Matrix::rankMatrix(a)
-  if (rk[1] == 1) {
+
+  ## Ok now we have to handle the pathological case of a matrix of rank one
+  ## with equal values on the columns (that ASCA invariably shows up as the mu term)
+  
+  if ((rk[1] == 1) & (diff(range(a[,1])) < .Machine$double.eps ^ 0.5)) {
     return(NULL)
   }
   sv <- svd(scale(a,scale = FALSE), nv = rk[1], nu = rk[1])
-  scores <- sv$u %*% diag(sv$d[1:rk[1]])
+  ## here we have to handle the construction of the diagonal matrix 
+  
+  scores <- sv$u %*% diag(sv$d[1:rk[1]], nrow = rk[1])
   loadings <-  sv$v
   variance <-  sv$d[1:rk[1]]^2
   ## calculate the variable importance combining loadings and explained variances
@@ -33,6 +39,7 @@ ASCA_svd_engine <- function(a) {
                 variance = variance)
     )
 }
+
 
 
 #' ASCA_svd
@@ -312,9 +319,6 @@ ASCA_do_jacknife <- function(d,x, nout = 1){
 
 
 
-
-
-
 #' ASCA_combine_terms
 #'
 #' @param arr3d 
@@ -342,6 +346,23 @@ ASCA_combine_terms <- function(arr3d,comb){
 }
 
 
+#' ASCA_fix_sign
+#'
+#' @description The function flips the sign of B if the scalar product with A is bigger than 90 degrees
+#' 
+#' @param A the reference vector
+#' @param B the second vector
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' 
+ASCA_fix_sign <- function(A,B){
+  mult <- sign(diag(t(A) %*% B))
+  flipB <- t(apply(B,1, function(r) r*mult))
+  return(flipB)
+}
 
 
 

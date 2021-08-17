@@ -10,6 +10,6 @@ License: GNU General Public License version 3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
-Depends: parallel, Matrix, stats, graphics
+Depends: R (>= 4.1.0), parallel, Matrix, stats, graphics
 VignetteBuilder: knitr
 Suggests: knitr
