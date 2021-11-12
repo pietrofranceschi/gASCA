@@ -16,9 +16,26 @@ If the matrix has rank 1 the decompoition is set to NULL}
 a list with the results of the SVD decomposition. 
  * scores: a list with the scores for each term, in the linear predictor space
  * loadings: a list with the scores for each term
- * varimp: a list with the importance of each variable for each term
  * variances: a list with the variance of each eigenvector for each term
 }
 \description{
 ASCA_svd
+}
+\examples{
+## load the data
+data("synth_count_data")
+
+## perform the ASCA decomposition
+decomposition_test <- ASCA_decompose(
+d = synth_count_data$design,
+x = synth_count_data$counts, 
+f = "time + treatment + time:treatment",
+glm_par = list(family = poisson())
+)
+
+## Run the SVD of the terms
+
+svd_test <- ASCA_svd(decomposition_test$decomposition)
+ 
+ 
 }

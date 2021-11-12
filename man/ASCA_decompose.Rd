@@ -27,9 +27,13 @@ ASCA_decompose(
 a list with the full outcomes of the decomposition with the following elements
 \itemize{
 \item decomposition: the 3D array holding the results of the decomposition
-\item deviance: the array containing the deviance of the models
+\item mu: a vector with the constant terms of the univariate models
+\item residuals: a matrix holding the model residuals
+\item prediction:  the matrix with the predicted values in the linear predictor space
+\item pseudoR2: a parameter to assess the goodness of fit for the model on each variable.
 \item glm_par: a list with the parameters used for modeling
 \item res_type: the type of residuals
+\item varimp: a list composed by two data.frames \code{wterm_varimp} and  \code{bterm_varimp}. see details
 }
 }
 \description{
@@ -40,13 +44,26 @@ The ASCA decomposition of a data matrix is performed by using Generalized Linear
 the estimation of the expected values. The use of GLM's allows the extension of the method to non normal data
 and unbalanced designs.
 This function performs only the decomposition without the SVD, which have to be performed by \code{ASCA_svd}
+The \code{pseudoR2} is calculated as 1-(residual deviance/null deviance). The variable importance list contains
+two data.frames. The \code{wterm_varimp} stores measure of the importance of each variable \eqn{c} for each term calculated as
+the squared norm of each column vector divided by the squared Frobenius norm of the term
+
+\deqn{Varimp(A,c) = |c|^{2}/\|A|_{F}^{2}}
+
+Since the terms are mean centered, the previous quantity is equivalent to the variance of variable \eqn{c} (for that term)
+normalized by the sum of the variances of all the variables.
+The \code{bterm_varimp} is instead a measure the weight of each variable across the different decomposition terms.
+Also in this case, the squared norm of the columns vectors relative to \eqn{c} is considered, but now it is normalized
+to the sum of the squared norms of the column vectors associated to \eqn{c} across the different terms.
+It is important to remember that the second quantity should be combined with a measure of model fit to obtain a meaningful measure of
+the variable importance across the different terms.
 }
 \examples{
 ## load the data
 data("synth_count_data")
 
 ## perform the ASCA decomposition
-ASCA_test <- ASCA_decompose(
+decomposition_test <- ASCA_decompose(
 d = synth_count_data$design,
 x = synth_count_data$counts, 
 f = "time + treatment + time:treatment",

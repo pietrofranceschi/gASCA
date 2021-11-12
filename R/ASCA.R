@@ -22,20 +22,14 @@ ASCA_svd_engine <- function(a) {
   scores <- sv$u %*% diag(sv$d[1:rk[1]], nrow = rk[1])
   loadings <-  sv$v
   variance <-  sv$d[1:rk[1]]^2
-  ## calculate the variable importance combining loadings and explained variances
-  ## variable importance is calculated combining the information contained in the 
-  ## relevant components
-  varimp <- rowSums(sweep(abs(loadings),2,variance,"*")/sum(variance))
-  
+ 
   ## assign names to rows and columns
-  names(varimp) <- colnames(a)
   dimnames(loadings) <- list(colnames(a),paste0("eig",1:rk[1]))
   dimnames(scores) <- list(rownames(a),paste0("eig",1:rk[1]))
   
   ## pack everything into a list
   return(list(scores = scores,
                 loadings = loadings,
-                varimp = varimp,
                 variance = variance)
     )
 }
@@ -50,10 +44,29 @@ ASCA_svd_engine <- function(a) {
 #' If the matrix has rank 1 the decompoition is set to NULL
 #'
 #' @return a list with the results of the SVD decomposition. 
+#' 
 #'  * scores: a list with the scores for each term, in the linear predictor space
 #'  * loadings: a list with the scores for each term
-#'  * varimp: a list with the importance of each variable for each term
 #'  * variances: a list with the variance of each eigenvector for each term 
+#'  
+#'  
+#'  
+#'@examples
+#' ## load the data
+#' data("synth_count_data")
+#' 
+#' ## perform the ASCA decomposition
+#' decomposition_test <- ASCA_decompose(
+#' d = synth_count_data$design,
+#' x = synth_count_data$counts, 
+#' f = "time + treatment + time:treatment",
+#' glm_par = list(family = poisson())
+#' )
+#' 
+#' ## Run the SVD of the terms
+#' svd_test <- ASCA_svd(decomposition_test$decomposition)
+#'  
+#'  
 #' @export
 #'
 #' 
@@ -69,7 +82,6 @@ ASCA_svd <- function(arr){
     ## format the output
     return(list(scores = lapply(svs, function(x) x$scores),
                 loadings = lapply(svs, function(x) x$loadings),
-                varimp = sapply(svs, function(x) x$varimp),
                 variances = lapply(svs, function(x) x$variance)
     )
     )
@@ -125,6 +137,19 @@ ASCA_svd_response <- function(arr, invlink = identity) {
 #' the estimation of the expected values. The use of GLM's allows the extension of the method to non normal data 
 #' and unbalanced designs. 
 #' This function performs only the decomposition without the SVD, which have to be performed by `ASCA_svd`
+#' The `pseudoR2` is calculated as 1-(residual deviance/null deviance). The variable importance list contains 
+#' two data.frames. The `wterm_varimp` stores measure of the importance of each variable \eqn{c} for each term calculated as 
+#' the squared norm of each column vector divided by the squared Frobenius norm of the term 
+#'  
+#' \deqn{Varimp(A,c) = |c|^{2}/\|A|_{F}^{2}}
+#' 
+#' Since the terms are mean centered, the previous quantity is equivalent to the variance of variable \eqn{c} (for that term) 
+#' normalized by the sum of the variances of all the variables.
+#' The `bterm_varimp` is instead a measure the weight of each variable across the different decomposition terms. 
+#' Also in this case, the squared norm of the columns vectors relative to \eqn{c} is considered, but now it is normalized 
+#' to the sum of the squared norms of the column vectors associated to \eqn{c} across the different terms. 
+#' It is important to remember that the second quantity should be combined with a measure of model fit to obtain a meaningful measure of
+#' the variable importance across the different terms.   
 #' 
 #' 
 #' @md
@@ -137,9 +162,13 @@ ASCA_svd_response <- function(arr, invlink = identity) {
 #' @return a list with the full outcomes of the decomposition with the following elements
 #' 
 #' * decomposition: the 3D array holding the results of the decomposition
-#' * deviance: the array containing the deviance of the models
+#' * mu: a vector with the constant terms of the univariate models
+#' * residuals: a matrix holding the model residuals
+#' * prediction:  the matrix with the predicted values in the linear predictor space
+#' * pseudoR2: a parameter to assess the goodness of fit for the model on each variable. 
 #' * glm_par: a list with the parameters used for modeling
 #' * res_type: the type of residuals
+#' * varimp: a list composed by two data.frames `wterm_varimp` and  `bterm_varimp`. see details
 #' 
 #' 
 #' 
@@ -148,7 +177,7 @@ ASCA_svd_response <- function(arr, invlink = identity) {
 #' data("synth_count_data")
 #' 
 #' ## perform the ASCA decomposition
-#' ASCA_test <- ASCA_decompose(
+#' decomposition_test <- ASCA_decompose(
 #' d = synth_count_data$design,
 #' x = synth_count_data$counts, 
 #' f = "time + treatment + time:treatment",
@@ -181,12 +210,13 @@ ASCA_decompose <- function(d,x,f,
   d <-as.data.frame(d)
   x <-as.data.frame(x)
   
-  
   ## check if d has numeric columns
   if (sum(vapply(d,is.numeric, FUN.VALUE = vector("logical",1)))) {
     stop("One of the columns of d is numeric, transform it to a factor")
   }
   
+  
+
   ## run the models and format the decomposition
   models <- parallel::mclapply(1:ncol(x), function(v){
     df <- cbind(y = x[,v],d)
@@ -194,16 +224,22 @@ ASCA_decompose <- function(d,x,f,
     ## run the modeling
     m <- do.call(stats::glm,glm_par_run)
     ## the terms in form of matrix
-    terms <- cbind(mu = stats::coefficients(m)["(Intercept)"], stats::predict(m, type = "terms"))
+    terms <- stats::predict(m, type = "terms")
+    ## organize the constant term
+    mu <-  attr(terms,"constant")
+  
     ## the matrix of terms is centered, so we need add the constant
     ## the mu term represents the "grand mean"
     
     ##  here the type of residuals should be set, now is the default (the deviance residuals)
-    err <- stats::residuals(m, type = res_type) 
+    residuals <- stats::residuals(m, type = res_type) 
     
     
-    return(list(dec = cbind(terms = terms, error = err),
-                deviance = stats::deviance(m)))
+    return(list(dec = terms,
+                mu = mu,
+                pseudoR2 = 1-(m$deviance/m$null.deviance),
+                residuals = residuals,
+                prediction = stats::predict(m, type = "link")))
   })
   
   ## organize the terms in a 3d array
@@ -211,17 +247,37 @@ ASCA_decompose <- function(d,x,f,
   dimnames(termarray) <- list(rownames(x),
                               colnames(models[[1]]$dec),
                               colnames(x))
+  resid_mat <- vapply(models, function(m) m$residuals, FUN.VALUE = models[[1]]$residuals)
+  predict_mat <- vapply(models, function(m) m$prediction, FUN.VALUE = models[[1]]$prediction)
   
-  ##here we scale the error parameter
-  termarray[,"error",] <- scale(termarray[,"error",])
+  
+  ## pseudoR2
+  pseudoR2_vec <- vapply(models,function(m) m$pseudoR2, FUN.VALUE = double(1))
+  names(pseudoR2_vec) <- colnames(x)
+  
+  ## mu
+  mu_vec <- vapply(models,function(m) m$mu, FUN.VALUE = double(1))
+  names(mu_vec) <- colnames(x)
+  
+  ## add the variable names to the residuals
+  colnames(resid_mat) <- colnames(x)
+  
+  ## add the variable names to the predictions
+  colnames(predict_mat) <- colnames(x)
+  
+  ## calculate the variable importance from the decomposition
   
   
   ## reset the contrasts!
   options("contrasts" = oldcontrasts$contrasts)
   return(list(decomposition = termarray,
-              deviance = sapply(models,function(m) m$deviance),
+              mu = mu_vec,
+              residuals = resid_mat,
+              prediction = predict_mat,
+              pseudoR2 = pseudoR2_vec,
               glm_par = glm_par,
-              res_type = res_type
+              res_type = res_type,
+              varimp = get_varimp(termarray)
               ))
 }
 
@@ -365,4 +421,33 @@ ASCA_fix_sign <- function(A,B){
 }
 
 
+# ------------------------------------------------------------------------
+## functions to calculate the variable importance
+# -----------------------------------------------------------------------
+
+
+#' get_varimp
+#'
+#' @description The function calculates the variable importance from the decomposition array. 
+#'
+#'
+#' @param termarray 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' 
+
+get_varimp <- function(termarray) {
+  termlist <- as.list(dimnames(termarray)[[2]])
+  termlist <- lapply(termlist, function(t) scale(termarray[,t,], scale = FALSE))
+  names(termlist) <- dimnames(termarray)[[2]]
+  varimpmat <- vapply(termlist, function(t) colSums(abs(t)^2), FUN.VALUE = double(10))
+  pippo <- colSums(varimpmat)
+  pluto <- colSums(t(varimpmat))
+  return(list(
+    "wterm_varimp" = as.data.frame(sweep(varimpmat,2,pippo,"/")),
+    "bterm_varimp" = as.data.frame(sweep(t(varimpmat),2,pluto,"/"))))
+}
 
