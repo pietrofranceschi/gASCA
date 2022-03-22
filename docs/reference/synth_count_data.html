@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Synthetic count data — synth_count_data • ASCA</title>
+<title>Synthetic count data — synth_count_data • gASCA</title>
 
 
 <!-- jquery -->
@@ -40,7 +40,19 @@
 
 
 <meta property="og:title" content="Synthetic count data — synth_count_data" />
-<meta property="og:description" content="A dataset mimicking the results of a counting experiments of 10 variables over 45 samples." />
+<meta property="og:description" content="A dataset mimicking the results of a counting experiments of 10 variables over 45 samples.
+Design:
+5 timepoints;
+3 treatments ;
+10 replicates
+
+
+The variables were created from a two latent variable model which were &quot;projected&quot; on the the final variables. In details
+s1,s2,s3,s4 respond to the &quot;time&quot; factor. s1 and s2 contribute to the first latent factor, s3 and s4 to the second
+s5,s6  respond to the &quot;treatment&quot; factor
+s1 and s2 respond also to the interaction term &quot;time:treatment&quot;. In other words, for them the effect of treatment depends on time.
+
+" />
 
 
 
@@ -71,8 +83,8 @@
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.9</span>
+        <a class="navbar-link" href="../index.html">gASCA</a>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5</span>
       </span>
     </div>
 
@@ -122,6 +134,18 @@
 
     <div class="ref-description">
     <p>A dataset mimicking the results of a counting experiments of 10 variables over 45 samples.</p>
+<p>Design:</p><ul>
+<li><p>5 timepoints;</p></li>
+<li><p>3 treatments ;</p></li>
+<li><p>10 replicates</p></li>
+</ul>
+
+<p>The variables were created from a two latent variable model which were "projected" on the the final variables. In details</p><ul>
+<li><p>s1,s2,s3,s4 respond to the "time" factor. s1 and s2 contribute to the first latent factor, s3 and s4 to the second</p></li>
+<li><p>s5,s6  respond to the "treatment" factor</p></li>
+<li><p>s1 and s2 respond also to the interaction term "time:treatment". In other words, for them the effect of treatment depends on time.</p></li>
+</ul>
+
     </div>
 
     <pre class="usage"><span class='va'>synth_count_data</span></pre>
@@ -130,19 +154,12 @@
     <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
 
     <p>a list with two components:</p><dl>
-  <dt>counts</dt><dd><p>a matrix with the counts (45x10)</p></dd>
-  <dt>design</dt><dd><p>a data.frame with the designh factors</p></dd>
-  ...
+<dt>counts</dt><dd><p>a matrix with the counts (45x10)</p></dd>
+<dt>design</dt><dd><p>a data.frame with the designh factors</p></dd>
+...
 
 </dl>
 
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>Design:</p>
-<p>* 5 timepoints; 
-* 3 treatments ;
-* 3 replicates</p>
-<p>The variables were created from a two latent variable model which were "projected" on the the final variables</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

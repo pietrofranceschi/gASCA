@@ -4,19 +4,38 @@
 \alias{ASCA_combine_terms}
 \title{ASCA_combine_terms}
 \usage{
-ASCA_combine_terms(arr3d, comb)
+ASCA_combine_terms(asca, comb)
 }
 \arguments{
-\item{arr3d}{}
+\item{asca}{the results of `ASCA_decompose`}
 
-\item{comb}{}
+\item{comb}{a vector of character stings with the names of the terms to combine}
 }
 \value{
-
+a new ASCA decomposition with updated terms and terms derived quantities. 
+The `combined` element keep tracks of the combined factors
 }
 \description{
-ASCA_combine_terms
+The function combines two or more terms of the ASCA decomposition
 }
 \examples{
+
+## load the data
+data("synth_count_data")
+
+## perform the ASCA decomposition
+dec_test <- ASCA_decompose(
+d = synth_count_data$design,
+x = synth_count_data$counts, 
+f = "time + treatment + time:treatment",
+glm_par = list(family = poisson())
+)
+
+## combine two terms
+comb_terms <- ASCA_combine_terms(dec_test, c("treatment","time:treatment"))
+
+## validate the combined decomposition
+comb_test_val <- ASCA_permutation(comb_terms, 10)
+
 
 }

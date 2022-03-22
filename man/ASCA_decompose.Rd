@@ -9,7 +9,7 @@ ASCA_decompose(
   x,
   f,
   glm_par = vector(mode = "list", length = 0),
-  res_type = "pearson"
+  res_type = "response"
 )
 }
 \arguments{
@@ -26,14 +26,20 @@ ASCA_decompose(
 \value{
 a list with the full outcomes of the decomposition with the following elements
 \itemize{
-\item decomposition: the 3D array holding the results of the decomposition
+\item decomposition: a list holding the results of the decomposition
 \item mu: a vector with the constant terms of the univariate models
 \item residuals: a matrix holding the model residuals
 \item prediction:  the matrix with the predicted values in the linear predictor space
 \item pseudoR2: a parameter to assess the goodness of fit for the model on each variable.
 \item glm_par: a list with the parameters used for modeling
 \item res_type: the type of residuals
-\item varimp: a list composed by two data.frames \code{wterm_varimp} and  \code{bterm_varimp}. see details
+\item varimp: the importance of the individual variables in the decomposition terms
+\item terms_L2: the L2 norm of the individual terms back transformed in the response space
+\item d: a data.frame with the design
+\item x: a data.frame with the initial data
+\item f: the string defining the decomposition
+\item combined: a vector holding the combined terms
+\item invlink: the inverse of the link function used in the glm fitting
 }
 }
 \description{
@@ -41,29 +47,25 @@ This function performs the full ASCA decomposition
 }
 \details{
 The ASCA decomposition of a data matrix is performed by using Generalized Linear Models to perform
-the estimation of the expected values. The use of GLM's allows the extension of the method to non normal data
+the estimation of the univariate expected values. The use of GLM's allows the extension of the method to non normal data
 and unbalanced designs.
-This function performs only the decomposition without the SVD, which have to be performed by \code{ASCA_svd}
-The \code{pseudoR2} is calculated as 1-(residual deviance/null deviance). The variable importance list contains
-two data.frames. The \code{wterm_varimp} stores measure of the importance of each variable \eqn{c} for each term calculated as
-the squared norm of each column vector divided by the squared Frobenius norm of the term
+This function performs only the decomposition without the SVD, which have to be performed by \code{ASCA_svd}.
+The quality of the model for each variable is assessed calculating the \code{pseudoR2}, which is defined as:
 
-\deqn{Varimp(A,c) = |c|^{2}/\|A|_{F}^{2}}
+\deqn{1-residual_deviance/null_deviance}
 
-Since the terms are mean centered, the previous quantity is equivalent to the variance of variable \eqn{c} (for that term)
-normalized by the sum of the variances of all the variables.
-The \code{bterm_varimp} is instead a measure the weight of each variable across the different decomposition terms.
-Also in this case, the squared norm of the columns vectors relative to \eqn{c} is considered, but now it is normalized
-to the sum of the squared norms of the column vectors associated to \eqn{c} across the different terms.
-It is important to remember that the second quantity should be combined with a measure of model fit to obtain a meaningful measure of
-the variable importance across the different terms.
+The variable importance element stores a measure of the importance of each variable \eqn{c} for each term calculated
+as the norm of each column back transformed in the response space. This is done to reduce the contribution of
+small expected values to the overall norm in the presence of log links. In this case, expected values close to zero
+are transformed into large negative values in the linear predictor space, so, paradoxically, the variable importance
+is larger when the expected values are smaller or in presence of large fraction of zeroes.
 }
 \examples{
 ## load the data
 data("synth_count_data")
 
 ## perform the ASCA decomposition
-decomposition_test <- ASCA_decompose(
+dec_test <- ASCA_decompose(
 d = synth_count_data$design,
 x = synth_count_data$counts, 
 f = "time + treatment + time:treatment",

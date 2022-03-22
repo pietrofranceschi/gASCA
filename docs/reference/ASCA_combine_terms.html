@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ASCA_combine_terms — ASCA_combine_terms • ASCA</title>
+<title>ASCA_combine_terms — ASCA_combine_terms • gASCA</title>
 
 
 <!-- jquery -->
@@ -40,7 +40,7 @@
 
 
 <meta property="og:title" content="ASCA_combine_terms — ASCA_combine_terms" />
-<meta property="og:description" content="ASCA_combine_terms" />
+<meta property="og:description" content="The function combines two or more terms of the ASCA decomposition" />
 
 
 
@@ -71,8 +71,8 @@
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.9</span>
+        <a class="navbar-link" href="../index.html">gASCA</a>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5</span>
       </span>
     </div>
 
@@ -121,32 +121,49 @@
     </div>
 
     <div class="ref-description">
-    <p>ASCA_combine_terms</p>
+    <p>The function combines two or more terms of the ASCA decomposition</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ASCA_combine_terms</span><span class='op'>(</span><span class='va'>arr3d</span>, <span class='va'>comb</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>ASCA_combine_terms</span><span class='op'>(</span><span class='va'>asca</span>, <span class='va'>comb</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>arr3d</th>
-      <td></td>
+      <th>asca</th>
+      <td><p>the results of `ASCA_decompose`</p></td>
     </tr>
     <tr>
       <th>comb</th>
-      <td></td>
+      <td><p>a vector of character stings with the names of the terms to combine</p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    
-
-
+    <p>a new ASCA decomposition with updated terms and terms derived quantities. 
+The `combined` element keep tracks of the combined factors</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
+<span class='co'>## load the data</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"synth_count_data"</span><span class='op'>)</span>
+
+<span class='co'>## perform the ASCA decomposition</span>
+<span class='va'>dec_test</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ASCA_decompose.html'>ASCA_decompose</a></span><span class='op'>(</span>
+d <span class='op'>=</span> <span class='va'>synth_count_data</span><span class='op'>$</span><span class='va'>design</span>,
+x <span class='op'>=</span> <span class='va'>synth_count_data</span><span class='op'>$</span><span class='va'>counts</span>, 
+f <span class='op'>=</span> <span class='st'>"time + treatment + time:treatment"</span>,
+glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>family <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/family.html'>poisson</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span>
+<span class='op'>)</span>
+
+<span class='co'>## combine two terms</span>
+<span class='va'>comb_terms</span> <span class='op'>&lt;-</span> <span class='fu'>ASCA_combine_terms</span><span class='op'>(</span><span class='va'>dec_test</span>, <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"treatment"</span>,<span class='st'>"time:treatment"</span><span class='op'>)</span><span class='op'>)</span>
+
+<span class='co'>## validate the combined decomposition</span>
+<span class='va'>comb_test_val</span> <span class='op'>&lt;-</span> <span class='fu'><a href='ASCA_permutation.html'>ASCA_permutation</a></span><span class='op'>(</span><span class='va'>comb_terms</span>, <span class='fl'>10</span><span class='op'>)</span>
+
+
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

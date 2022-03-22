@@ -4,19 +4,16 @@
 \alias{ASCA_svd}
 \title{ASCA_svd}
 \usage{
-ASCA_svd(arr)
+ASCA_svd(decomposition, ...)
 }
 \arguments{
-\item{arr}{the multidimensional (2D or 3D) array. In 2D case rows are samples and columns variables. 
-In the 3D case (the output of `ASCA_decompose`) organized as samples x terms x variables 
-the SVD is performed along the 2nd dimension, aka one SVD per term.
-If the matrix has rank 1 the decompoition is set to NULL}
+\item{decomposition}{the decomposition list produced by  \code{ASCA_decompose}.}
+
+\item{...}{additional parameters to be passed to \code{prcomp}}
 }
 \value{
-a list with the results of the SVD decomposition. 
- * scores: a list with the scores for each term, in the linear predictor space
- * loadings: a list with the scores for each term
- * variances: a list with the variance of each eigenvector for each term
+a list with the results of the SVD decomposition for each term. Each element is the output of a
+\code{prcomp}
 }
 \description{
 ASCA_svd
@@ -26,7 +23,7 @@ ASCA_svd
 data("synth_count_data")
 
 ## perform the ASCA decomposition
-decomposition_test <- ASCA_decompose(
+dec_test <- ASCA_decompose(
 d = synth_count_data$design,
 x = synth_count_data$counts, 
 f = "time + treatment + time:treatment",
@@ -34,8 +31,6 @@ glm_par = list(family = poisson())
 )
 
 ## Run the SVD of the terms
-
-svd_test <- ASCA_svd(decomposition_test$decomposition)
- 
+svd_test <- ASCA_svd(dec_test$decomposition)
  
 }

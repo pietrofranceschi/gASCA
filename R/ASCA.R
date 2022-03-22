@@ -16,7 +16,7 @@ ASCA_svd_engine <- function(a) {
   if ((rk[1] == 1) & (diff(range(a[,1])) < .Machine$double.eps ^ 0.5)) {
     return(NULL)
   }
-  sv <- svd(scale(a,scale = FALSE), nv = rk[1], nu = rk[1])
+  sv <- svd(scale(a), nv = rk[1], nu = rk[1])
   ## here we have to handle the construction of the diagonal matrix 
   
   scores <- sv$u %*% diag(sv$d[1:rk[1]], nrow = rk[1])
@@ -26,6 +26,7 @@ ASCA_svd_engine <- function(a) {
   ## assign names to rows and columns
   dimnames(loadings) <- list(colnames(a),paste0("eig",1:rk[1]))
   dimnames(scores) <- list(rownames(a),paste0("eig",1:rk[1]))
+  names(variance) <- paste0("eig",1:rk[1])
   
   ## pack everything into a list
   return(list(scores = scores,
@@ -35,28 +36,21 @@ ASCA_svd_engine <- function(a) {
 }
 
 
-
 #' ASCA_svd
+#' @md
+#' @param decomposition the decomposition list produced by  `ASCA_decompose`.
+#' @param ... additional parameters to be passed to `prcomp`
 #'
-#' @param arr the multidimensional (2D or 3D) array. In 2D case rows are samples and columns variables. 
-#' In the 3D case (the output of `ASCA_decompose`) organized as samples x terms x variables 
-#' the SVD is performed along the 2nd dimension, aka one SVD per term.
-#' If the matrix has rank 1 the decompoition is set to NULL
-#'
-#' @return a list with the results of the SVD decomposition. 
+#' @return a list with the results of the SVD decomposition for each term. Each element is the output of a  
+#' `prcomp` 
 #' 
-#'  * scores: a list with the scores for each term, in the linear predictor space
-#'  * loadings: a list with the scores for each term
-#'  * variances: a list with the variance of each eigenvector for each term 
-#'  
-#'  
 #'  
 #'@examples
 #' ## load the data
 #' data("synth_count_data")
 #' 
 #' ## perform the ASCA decomposition
-#' decomposition_test <- ASCA_decompose(
+#' dec_test <- ASCA_decompose(
 #' d = synth_count_data$design,
 #' x = synth_count_data$counts, 
 #' f = "time + treatment + time:treatment",
@@ -64,111 +58,69 @@ ASCA_svd_engine <- function(a) {
 #' )
 #' 
 #' ## Run the SVD of the terms
-#' svd_test <- ASCA_svd(decomposition_test$decomposition)
-#'  
+#' svd_test <- ASCA_svd(dec_test$decomposition)
 #'  
 #' @export
 #'
-#' 
 
-ASCA_svd <- function(arr){
-  ## check the size of the arr
-  if (length(dim(arr)) == 2) {
-    return(ASCA_svd_engine(arr))
-  } else {
-    svs <- apply(arr,2, function(mat) ASCA_svd_engine(mat))
-    ## add the term name to the output list
-    names(svs) <- dimnames(arr)[[2]]
-    ## format the output
-    return(list(scores = lapply(svs, function(x) x$scores),
-                loadings = lapply(svs, function(x) x$loadings),
-                variances = lapply(svs, function(x) x$variance)
-    )
-    )
+ASCA_svd <- function(decomposition, ...){
+  #svs <- lapply(decomposition, function(mat) ASCA_svd_engine(mat))
+  pcas <- lapply(decomposition,prcomp,...)
+
+  ## define the class of the decomposition
+  attr(pcas, "class") <- "ASCA_svd"
+  return(pcas)
   }
-}
-
-
-#' ASCA_svd_response
-#'
-#' @param arr the multidimensional (2D or 3D) array. In 2D case rows are samples and columns variables. 
-#' In the 3D case (the output of `ASCA_decompose`) organized as samples x terms x variables 
-#' the SVD is performed along the 2nd dimension, aka one SVD per term.
-#' If the matrix has rank 1 the decompoition is set to NULL
-#' @param invlink the function to be applied to the scores of the terms that are not NULL or error
-#'
-#' @return a list with the results of the SVD decomposition. 
-#'  * scores: a list with the scores for each term, in the response
-#'  * loadings: a list with the scores for each term
-#'  * varimp: a list with the importance of each variable for each term
-#'  * variances: a list with the variance of each eigenvector for each term 
-#' @export
-#'
-#' 
-
-
-
-ASCA_svd_response <- function(arr, invlink = identity) {
-  svdout <- ASCA_svd(arr)
-  unchangedid <- c(names(which(sapply(svdout$scores, is.null))), "error")
-  term_s <- names(svdout$scores)
-  changeids <- term_s[!(term_s %in% unchangedid)]
-  scores_response <- svdout$scores
-  scores_response[changeids] <- lapply(scores_response[changeids], invlink)
-  svdout$scores <- scores_response
-  return(svdout)
-}
-
 
 
 # ------------------------------------------------------------------------
 ## functions for glm decomposition
 # -----------------------------------------------------------------------
 
-
-
 #' ASCA_decompose
 #' 
 #' @description 
 #' This function performs the full ASCA decomposition
-#'
+#' @md
 #' @details 
 #' The ASCA decomposition of a data matrix is performed by using Generalized Linear Models to perform 
-#' the estimation of the expected values. The use of GLM's allows the extension of the method to non normal data 
+#' the estimation of the univariate expected values. The use of GLM's allows the extension of the method to non normal data 
 #' and unbalanced designs. 
-#' This function performs only the decomposition without the SVD, which have to be performed by `ASCA_svd`
-#' The `pseudoR2` is calculated as 1-(residual deviance/null deviance). The variable importance list contains 
-#' two data.frames. The `wterm_varimp` stores measure of the importance of each variable \eqn{c} for each term calculated as 
-#' the squared norm of each column vector divided by the squared Frobenius norm of the term 
-#'  
-#' \deqn{Varimp(A,c) = |c|^{2}/\|A|_{F}^{2}}
+#' This function performs only the decomposition without the SVD, which have to be performed by `ASCA_svd`.
+#' The quality of the model for each variable is assessed calculating the `pseudoR2`, which is defined as:
 #' 
-#' Since the terms are mean centered, the previous quantity is equivalent to the variance of variable \eqn{c} (for that term) 
-#' normalized by the sum of the variances of all the variables.
-#' The `bterm_varimp` is instead a measure the weight of each variable across the different decomposition terms. 
-#' Also in this case, the squared norm of the columns vectors relative to \eqn{c} is considered, but now it is normalized 
-#' to the sum of the squared norms of the column vectors associated to \eqn{c} across the different terms. 
-#' It is important to remember that the second quantity should be combined with a measure of model fit to obtain a meaningful measure of
-#' the variable importance across the different terms.   
+#' \deqn{1-residual_deviance/null_deviance}
+#' 
+#' The variable importance element stores a measure of the importance of each variable \eqn{c} for each term calculated 
+#' as the norm of each column back transformed in the response space. This is done to reduce the contribution of 
+#' small expected values to the overall norm in the presence of log links. In this case, expected values close to zero 
+#' are transformed into large negative values in the linear predictor space, so, paradoxically, the variable importance 
+#' is larger when the expected values are smaller or in presence of large fraction of zeroes.   
 #' 
 #' 
-#' @md
 #' @param d a data.frame/matrix with the design
 #' @param x a data.frame/matrix of numeric values to be decomposed 
 #' @param f a string holding the formula of the decomposition
 #' @param glm_par a list with the parameters to be passed to the `glm` call
 #' @param res_type the types of GLM residuals
 #'
+#' @md
 #' @return a list with the full outcomes of the decomposition with the following elements
 #' 
-#' * decomposition: the 3D array holding the results of the decomposition
+#' * decomposition: a list holding the results of the decomposition
 #' * mu: a vector with the constant terms of the univariate models
 #' * residuals: a matrix holding the model residuals
 #' * prediction:  the matrix with the predicted values in the linear predictor space
 #' * pseudoR2: a parameter to assess the goodness of fit for the model on each variable. 
 #' * glm_par: a list with the parameters used for modeling
 #' * res_type: the type of residuals
-#' * varimp: a list composed by two data.frames `wterm_varimp` and  `bterm_varimp`. see details
+#' * varimp: the importance of the individual variables in the decomposition terms
+#' * terms_L2: the L2 norm of the individual terms back transformed in the response space
+#' * d: a data.frame with the design
+#' * x: a data.frame with the initial data
+#' * f: the string defining the decomposition
+#' * combined: a vector holding the combined terms
+#' * invlink: the inverse of the link function used in the glm fitting
 #' 
 #' 
 #' 
@@ -177,7 +129,7 @@ ASCA_svd_response <- function(arr, invlink = identity) {
 #' data("synth_count_data")
 #' 
 #' ## perform the ASCA decomposition
-#' decomposition_test <- ASCA_decompose(
+#' dec_test <- ASCA_decompose(
 #' d = synth_count_data$design,
 #' x = synth_count_data$counts, 
 #' f = "time + treatment + time:treatment",
@@ -192,7 +144,7 @@ ASCA_svd_response <- function(arr, invlink = identity) {
 
 ASCA_decompose <- function(d,x,f, 
                            glm_par = vector(mode = "list", length = 0),
-                           res_type = "pearson"){
+                           res_type = "response"){
   ## contrasts should be changed so first I save the old ones
   oldcontrasts <- options("contrasts")
   ## then I set the new ones
@@ -231,7 +183,7 @@ ASCA_decompose <- function(d,x,f,
     ## the matrix of terms is centered, so we need add the constant
     ## the mu term represents the "grand mean"
     
-    ##  here the type of residuals should be set, now is the default (the deviance residuals)
+    ##  here the type of residuals should be set, now is response
     residuals <- stats::residuals(m, type = res_type) 
     
     
@@ -239,7 +191,8 @@ ASCA_decompose <- function(d,x,f,
                 mu = mu,
                 pseudoR2 = 1-(m$deviance/m$null.deviance),
                 residuals = residuals,
-                prediction = stats::predict(m, type = "link")))
+                prediction = stats::predict(m, type = "link"),
+                linkinv = m$family$linkinv))
   })
   
   ## organize the terms in a 3d array
@@ -247,6 +200,12 @@ ASCA_decompose <- function(d,x,f,
   dimnames(termarray) <- list(rownames(x),
                               colnames(models[[1]]$dec),
                               colnames(x))
+  
+  termlist <- lapply(colnames(models[[1]]$dec), function(t) termarray[ ,t,])
+  names(termlist) <- colnames(models[[1]]$dec)
+  
+  
+  ## residuals and predictions
   resid_mat <- vapply(models, function(m) m$residuals, FUN.VALUE = models[[1]]$residuals)
   predict_mat <- vapply(models, function(m) m$prediction, FUN.VALUE = models[[1]]$prediction)
   
@@ -270,155 +229,85 @@ ASCA_decompose <- function(d,x,f,
   
   ## reset the contrasts!
   options("contrasts" = oldcontrasts$contrasts)
-  return(list(decomposition = termarray,
-              mu = mu_vec,
-              residuals = resid_mat,
-              prediction = predict_mat,
-              pseudoR2 = pseudoR2_vec,
-              glm_par = glm_par,
-              res_type = res_type,
-              varimp = get_varimp(termarray)
-              ))
+  
+  
+  output <- list(decomposition = termlist,
+                 mu = mu_vec,
+                 residuals = resid_mat,
+                 prediction = predict_mat,
+                 pseudoR2 = pseudoR2_vec,
+                 glm_par = glm_par,
+                 res_type = res_type,
+                 varimp = ASCA_get_varimp(termlist,models[[1]]$linkinv),                                     
+                 terms_L2 = vapply(termlist,function(t) ASCA_norm(t,linkinv = models[[1]]$linkinv),
+                                 FUN.VALUE = double(1)),                      
+                 d = d,
+                 x = x,
+                 f = f,
+                 combined = NULL,
+                 linkinv = models[[1]]$linkinv
+  )
+  
+  ## define the class of the decomposition
+  attr(output, "class") <- "ASCA_decomposition"
+  
+  return(output)
 }
-
-
-# ------------------------------------------------------------------------
-## functions for bootstrap and validations
-# -----------------------------------------------------------------------
-
-
-
-#' ASCA_do_bootstrap
-#'
-#' @description The function performs a "design" aware bootstrap of a data matrix.
-#'
-#' @param d a dataframe with the design
-#' @param x the data matrix
-#'
-#' @return a list containing the initial design and the bootstrap data matrix
-#' @export
-#'
-#' @examples
-#' 
-ASCA_do_bootstrap <- function(d,x){
-  ## here we construct a factor to associate each sample to a level of
-  ## the design
-  
-  ## check if d has numeric columns
-  if (sum(vapply(d,is.numeric, FUN.VALUE = vector("logical",1)))) {
-    stop("One of the columns of d is numeric, transform it to a factor")
-  }
-  
-  if (ncol(d) == 1) {
-    factid <- d[,1]
-  } else {
-    factid <- apply(d,1,paste,collapse = "_")
-  }
-  ## now we split the data by the factor
-  splitx <- split(as.data.frame(x),factid)
-  ## create the bootstrap sample
-  splitx_bootstrap <- lapply(splitx, function(i) i[sample(1:nrow(i), nrow(i), replace = TRUE),])
-  ## rejoin the x
-  x_boot <- unsplit(splitx_bootstrap,factid)
-  return(list(x_val = x_boot,
-              d_val = d))
-}
-
-
-#' ASCA_do_jacknife
-#'
-#' @description The function performs a "design" aware jacknifing of a data matrix.
-#'
-#' @param d a dataframe with the design
-#' @param x the data matrix
-#' @param nout the number of samples for left out for each design level   
-#'
-#' @return a list containing the initial design and the reduced data matrix
-#' @export
-#'
-#' @examples
-#' 
-
-ASCA_do_jacknife <- function(d,x, nout = 1){
-  
-  ## here we construct a factor to associate each sample to a level of
-  ## the design
-  ## we need to add an error if the nout is bigger than the minimum size of the classes
-  
-  
-  ## check if d has numeric columns
-  if (sum(vapply(d,is.numeric, FUN.VALUE = vector("logical",1)))) {
-    stop("One of the columns of d is numeric, transform it to a factor")
-  }
-  
-  
-  if (ncol(d) == 1) {
-    factid <- d[,1]
-  } else {
-    factid <- apply(d,1,paste,collapse = "_")
-  }
-  ## now we split the data by the factor
-  splitx <- split(as.data.frame(x),factid)
-  splitd <- split(d,factid)
-  ## create the jacknife
-  splitx_jk <- lapply(splitx, function(i) i[sample(1:nrow(i), nrow(i)-nout),])
-  splitd_jk <- lapply(splitd, function(i) i[sample(1:nrow(i), nrow(i)-nout),])
-  ## rejoin the x
-  ## here is differnt from bootstrap because also d should be smaller
-  x_jk <- do.call(rbind,splitx_jk)
-  rownames(x_jk) <- NULL
-  d_jk <- do.call(rbind,splitd_jk)
-  rownames(d_jk) <- NULL
-  return(list(x_val = x_jk,
-              d_val = d_jk))
-}
-
 
 
 #' ASCA_combine_terms
 #'
-#' @param arr3d 
-#' @param comb 
+#' @description The function combines two or more terms of the ASCA decomposition 
+#' 
+#' @param asca the results of `ASCA_decompose`
+#' @param comb a vector of character stings with the names of the terms to combine
 #'
-#' @return
+#' @return a new ASCA decomposition with updated terms and terms derived quantities. 
+#' The `combined` element keep tracks of the combined factors
+#' 
 #' @export
 #'
 #' @examples
 #' 
+#' ## load the data
+#' data("synth_count_data")
+#' 
+#' ## perform the ASCA decomposition
+#' dec_test <- ASCA_decompose(
+#' d = synth_count_data$design,
+#' x = synth_count_data$counts, 
+#' f = "time + treatment + time:treatment",
+#' glm_par = list(family = poisson())
+#' )
+#'
+#' ## combine two terms
+#' comb_terms <- ASCA_combine_terms(dec_test, c("treatment","time:treatment"))
+#' 
+#' ## validate the combined decomposition
+#' comb_test_val <- ASCA_permutation(comb_terms, 10)
+#' 
+#' 
 
-ASCA_combine_terms <- function(arr3d,comb){
+ASCA_combine_terms <- function(asca,comb){
   
-  combine_engine <- function(arr2d,comb){
-    df_terms <- as.data.frame(arr2d)
-    new_term_name <- paste(comb,collapse = "+")
-    df_terms[[new_term_name]] <- Reduce('+',df_terms[,comb])
-    df_terms <- df_terms[,!(colnames(df_terms) %in% comb)]
-    out <- as.matrix(df_terms)
-    return(out)
-  }
+  new_term_name <- paste(comb,collapse = "+")
+  combterm <- do.call('+',asca$decomposition[comb])
   
-  out <- apply(arr3d,3,function(x) combine_engine(x,comb), simplify = FALSE)
-  return(simplify2array(out))
+  new_decomposition_list <- asca$decomposition
+  new_decomposition_list[[new_term_name]] <- combterm
+  
+  new_asca <- asca
+  
+  new_asca$decomposition <- new_decomposition_list
+  new_asca$varimp <-  ASCA_get_varimp(new_decomposition_list,asca$linkinv)
+  new_asca$terms_L2 <-  vapply(new_decomposition_list,function(t) ASCA_norm(t,linkinv = asca$linkinv),
+                               FUN.VALUE = double(1))    
+  new_asca$combined <- comb
+  
+  return(new_asca)
 }
 
 
-#' ASCA_fix_sign
-#'
-#' @description The function flips the sign of B if the scalar product with A is bigger than 90 degrees
-#' 
-#' @param A the reference vector
-#' @param B the second vector
-#'
-#' @return
-#' @export
-#'
-#' @examples
-#' 
-ASCA_fix_sign <- function(A,B){
-  mult <- sign(diag(t(A) %*% B))
-  flipB <- t(apply(B,1, function(r) r*mult))
-  return(flipB)
-}
 
 
 # ------------------------------------------------------------------------
@@ -426,28 +315,189 @@ ASCA_fix_sign <- function(A,B){
 # -----------------------------------------------------------------------
 
 
-#' get_varimp
+#' ASCA_get_varimp
 #'
 #' @description The function calculates the variable importance from the decomposition array. 
+#' See \link[ASCA]{ASCA_decompose} for additional details on how the variable importance is calculated
 #'
 #'
-#' @param termarray 
+#' @param termlist The list of matrices holding the results of an ASCA decomposition
+#' @param invlink The inverse link function to be applied to back transform the vectors 
+#'
+#' @return a matrix with the variable importance for each term (see \link[ASCA]{ASCA_decompose})
+#' 
+
+
+ASCA_get_varimp <- function(termlist,linkinv) {
+  out <- vapply(termlist, 
+                function(t) apply(t,2, function(c) ASCA_norm(c,linkinv = linkinv)), 
+                FUN.VALUE = double(ncol(termlist[[1]])))
+  return(out)
+}
+
+
+
+# ------------------------------------------------------------------------
+## functions to calculate the matrix norm
+# -----------------------------------------------------------------------
+
+
+#' ASCA_norm
+#'
+#' @md
+#' @param m 
+#' @param linkinv 
 #'
 #' @return
+
+ASCA_norm <- function(m, linkinv = identity) {
+  linkinv = identity  ## now we use the standard norm
+  m1 <- linkinv(m)
+  if (is.matrix(m1)){
+    return(norm(m1, type = "F"))
+  } else {
+    return(norm(m1, type = "2"))
+  }
+}
+
+
+
+
+
+# ------------------------------------------------------------------------
+## functions for validation
+# -----------------------------------------------------------------------
+
+#' ASCA_permute_design
+#' 
+#' @description The function performs a random permutation of a design data frame.
+#' All columns are permuted independently
+#'
+#' 
+#' @param d a design data.frame 
+#'
+#' @return a data.frame
+#' 
+
+
+ASCA_permute_design <- function (d){
+  perm_d <- apply(d, 2L, sample)
+  perm_d
+}
+
+
+#' ASCA_permutation
+#'
+#' @description the function implements a design permutation strategy to validate the results of an ASCA decomposition
+#'
+#' @param asca an object of class `ASCA_decomposition` 
+#' @param turns the number of permutations
+#' @param qt the empirical quantile
+#' @md
+#' @return A list with the following elements
+#' 
+#' * `R2_qt`: a matrix with the quantiles for the pseusoR2 of the individual variables
+#' * `L2_qt`: a matrix with the quantiles for the L2 norm of the individual terms
+#' * `varimp_qt`: a list holding the matrices of quantiles for each variable in each term
+#'  
 #' @export
 #'
 #' @examples
 #' 
+#' ## load the data
+#' data("synth_count_data")
+#' 
+#' ## perform the ASCA decomposition
+#' dec_test <- ASCA_decompose( d = synth_count_data$design,
+#' x = synth_count_data$counts, 
+#' f = "time + treatment + time:treatment",
+#' glm_par = list(family = poisson())
+#' )
+#' 
+#' ## validate the outcomes
+#' 
+#' val_out <- ASCA_permutation(dec_test, 10)
+#' 
+#' 
 
-get_varimp <- function(termarray) {
-  termlist <- as.list(dimnames(termarray)[[2]])
-  termlist <- lapply(termlist, function(t) scale(termarray[,t,], scale = FALSE))
-  names(termlist) <- dimnames(termarray)[[2]]
-  varimpmat <- vapply(termlist, function(t) colSums(abs(t)^2), FUN.VALUE = double(10))
-  pippo <- colSums(varimpmat)
-  pluto <- colSums(t(varimpmat))
-  return(list(
-    "wterm_varimp" = as.data.frame(sweep(varimpmat,2,pippo,"/")),
-    "bterm_varimp" = as.data.frame(sweep(t(varimpmat),2,pluto,"/"))))
+
+ASCA_permutation <- function(asca,
+                             turns = 500,
+                             qt = 0.95){
+  
+  ## objects to collect the outcomes
+  random_ascas_R2 <- matrix(0,ncol = length(asca$pseudoR2),nrow = turns)
+  colnames(random_ascas_R2) <- names(asca$pseudoR2)
+  
+  random_ascas_L2 <- matrix(0, ncol = length(asca$terms_L2), nrow = turns)
+  colnames(random_ascas_L2) <- names(asca$terms_L2)
+  
+  random_ascas_varimp <- array(0,c(dim(asca$varimp),turns))
+  random_ascas_varimp_names <- dimnames(asca$varimp)
+  random_ascas_varimp_names[[3]] <- NULL
+  dimnames(random_ascas_varimp) <- random_ascas_varimp_names
+  
+  ## run the battery ascas
+  for (i in 1:turns){
+    d_perm <- ASCA_permute_design(asca$d)
+    running_asca <- ASCA_decompose(d = d_perm,
+                                   x = asca$x,
+                                   f = asca$f,
+                                   glm_par = asca$glm_par)
+    if (!is.null(asca$combined)) {
+      running_asca <- ASCA_combine_terms(running_asca,asca$combined)
+    }
+    random_ascas_R2[i,] <- running_asca$pseudoR2
+    random_ascas_L2[i,] <- running_asca$terms_L2
+    random_ascas_varimp[,,i] <- running_asca$varimp
+  } 
+  
+  ## organize the outputs
+  
+  R2_qt <- apply(random_ascas_R2,2,quantile,probs = qt)
+  L2_qt <- apply(random_ascas_L2,2,quantile,probs = qt)
+  varimp_qt <- apply(random_ascas_varimp,c(1,2),quantile,probs = qt)
+  
+  ## variable importance here is an array, let's make it a list ...
+  
+  varimp_qt_list_names <- as.list(dimnames(varimp_qt)[[1]])
+  names(varimp_qt_list_names) <- dimnames(varimp_qt)[[1]]
+  
+  # varimp_qt_list <- lapply(varimp_qt_list_names, function(n) varimp_qt[n,,])
+  
+  
+  out <- list("R2_qt" = R2_qt,
+              "L2_qt" = L2_qt,
+              "varimp_qt" = varimp_qt)
+  
+  return(out)
 }
+
+
+# ------------------------------------------------------------------------
+## Subsetting variables
+# -----------------------------------------------------------------------
+
+
+#' ASCA_trim_vars
+#'
+#' @param decomposition a list of decomposition matrices produced by `ASCA_decompose` or `ASCA_combine_terms`
+#' @param keep a vector of numbers or names indicating the variables which should be kept
+#'
+#' @return a list of reduced matrices 
+#' @export
+#'
+
+ASCA_trim_vars <- function(decomposition, keep = NULL) {
+  if (is.null(keep)) {
+    return(decomposition)
+  } else {
+    out <- lapply(decomposition, function(t) t[,keep])
+    return(out)
+  }
+}
+
+
+
+
 

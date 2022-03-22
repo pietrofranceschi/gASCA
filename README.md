@@ -1,4 +1,4 @@
-# ASCA
+# gASCA
 
 ## Description
 
@@ -11,7 +11,7 @@ Implementation of a GLM based Analysis of variance – Simultaneous Component An
 install.packages("devtools")
 
 ## install the last version from github
-devtools::install_github("pietrofranceschi/ASCA", build_vignettes=TRUE)
+devtools::install_github("pietrofranceschi/gASCA", build_vignettes=TRUE)
 
 ```
 

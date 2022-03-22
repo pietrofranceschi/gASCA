@@ -1,7 +1,7 @@
-Package: ASCA
+Package: gASCA
 Type: Package
-Title: ANOVA – Simultaneous Component Analysis (ASCA)
-Version: 0.1.9
+Title: glm based ANOVA – Simultaneous Component Analysis (ASCA)
+Version: 0.5
 Authors@R: person("Pietro", "Franceschi", email = "pietro.franceschi@fmach.it",
                   role = c("aut", "cre"))
 Maintainer: The package maintainer <pietro.franceschi@fmach.it>

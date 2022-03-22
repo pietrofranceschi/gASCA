@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ASCA_decompose — ASCA_decompose • ASCA</title>
+<title>ASCA_decompose — ASCA_decompose • gASCA</title>
 
 
 <!-- jquery -->
@@ -71,8 +71,8 @@
         <span class="icon-bar"></span>
       </button>
       <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">ASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.9</span>
+        <a class="navbar-link" href="../index.html">gASCA</a>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5</span>
       </span>
     </div>
 
@@ -129,7 +129,7 @@
   <span class='va'>x</span>,
   <span class='va'>f</span>,
   glm_par <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/vector.html'>vector</a></span><span class='op'>(</span>mode <span class='op'>=</span> <span class='st'>"list"</span>, length <span class='op'>=</span> <span class='fl'>0</span><span class='op'>)</span>,
-  res_type <span class='op'>=</span> <span class='st'>"pearson"</span>
+  res_type <span class='op'>=</span> <span class='st'>"response"</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -160,25 +160,42 @@
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>a list with the full outcomes of the decomposition with the following elements</p><ul>
-<li><p>decomposition: the 3D array holding the results of the decomposition</p></li>
-<li><p>deviance: the array containing the deviance of the models</p></li>
+<li><p>decomposition: a list holding the results of the decomposition</p></li>
+<li><p>mu: a vector with the constant terms of the univariate models</p></li>
+<li><p>residuals: a matrix holding the model residuals</p></li>
+<li><p>prediction:  the matrix with the predicted values in the linear predictor space</p></li>
+<li><p>pseudoR2: a parameter to assess the goodness of fit for the model on each variable.</p></li>
 <li><p>glm_par: a list with the parameters used for modeling</p></li>
 <li><p>res_type: the type of residuals</p></li>
+<li><p>varimp: the importance of the individual variables in the decomposition terms</p></li>
+<li><p>terms_L2: the L2 norm of the individual terms back transformed in the response space</p></li>
+<li><p>d: a data.frame with the design</p></li>
+<li><p>x: a data.frame with the initial data</p></li>
+<li><p>f: the string defining the decomposition</p></li>
+<li><p>combined: a vector holding the combined terms</p></li>
+<li><p>invlink: the inverse of the link function used in the glm fitting</p></li>
 </ul>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>The ASCA decomposition of a data matrix is performed by using Generalized Linear Models to perform
-the estimation of the expected values. The use of GLM's allows the extension of the method to non normal data
+the estimation of the univariate expected values. The use of GLM's allows the extension of the method to non normal data
 and unbalanced designs.
-This function performs only the decomposition without the SVD, which have to be performed by <code>ASCA_svd</code></p>
+This function performs only the decomposition without the SVD, which have to be performed by <code>ASCA_svd</code>.
+The quality of the model for each variable is assessed calculating the <code>pseudoR2</code>, which is defined as:</p>
+<p>$$1-residual_deviance/null_deviance$$</p>
+<p>The variable importance element stores a measure of the importance of each variable \(c\) for each term calculated
+as the norm of each column back transformed in the response space. This is done to reduce the contribution of
+small expected values to the overall norm in the presence of log links. In this case, expected values close to zero
+are transformed into large negative values in the linear predictor space, so, paradoxically, the variable importance
+is larger when the expected values are smaller or in presence of large fraction of zeroes.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'>## load the data</span>
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"synth_count_data"</span><span class='op'>)</span>
 
 <span class='co'>## perform the ASCA decomposition</span>
-<span class='va'>ASCA_test</span> <span class='op'>&lt;-</span> <span class='fu'>ASCA_decompose</span><span class='op'>(</span>
+<span class='va'>dec_test</span> <span class='op'>&lt;-</span> <span class='fu'>ASCA_decompose</span><span class='op'>(</span>
 d <span class='op'>=</span> <span class='va'>synth_count_data</span><span class='op'>$</span><span class='va'>design</span>,
 x <span class='op'>=</span> <span class='va'>synth_count_data</span><span class='op'>$</span><span class='va'>counts</span>, 
 f <span class='op'>=</span> <span class='st'>"time + treatment + time:treatment"</span>,
