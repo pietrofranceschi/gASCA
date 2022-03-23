@@ -12,4 +12,4 @@ LazyData: true
 RoxygenNote: 7.1.1
 Depends: R (>= 4.1.0), parallel, Matrix, stats, graphics
 VignetteBuilder: knitr
-Suggests: knitr
+Suggests: knitr, rmarkdown
