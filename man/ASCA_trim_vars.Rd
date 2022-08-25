@@ -17,3 +17,21 @@ a list of reduced matrices
 \description{
 ASCA_trim_vars
 }
+\examples{
+
+## load the data
+data("synth_count_data")
+
+## perform the ASCA decomposition
+dec_test <- ASCA_decompose( d = synth_count_data$design,
+x = synth_count_data$counts, 
+f = "time + treatment + time:treatment",
+glm_par = list(family = poisson())
+)
+
+## keep only the forst six species 
+
+trimmed_dec <- ASCA_trim_vars(dec_test$decomposition, 1:6)
+
+
+}

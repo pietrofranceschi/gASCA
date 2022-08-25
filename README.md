@@ -21,9 +21,10 @@ ASCA is a multivariate method which can be used to analyze designed experiments 
 
 In the ASCA package implementation the expected values for each factor are estimated trough Generalized Linear Modeling (GLM) this extend the original approach to unbalanced designs and to non normally distributed data like counts.
 
-It is wort mentioning that on the same line of reasoning an extension of ASCA to linear mixed models has been recently proposed
 
 ## References
+
+-  Jansen, J. J., Hoefsloot, H. C., van der Greef, J., Timmerman, M. E., Westerhuis, J. A., & Smilde, A. K.. "ASCA: analysis of multivariate data obtained from an experimental design". *Journal of Chemometrics: A Journal of the Chemometrics Society*, 19(9) (2005), 469-481.
 
 -   Thiel, Michel, Baptiste Feraud, and Bernadette Govaerts. "ASCA+ and APCA+: Extensions of ASCA and APCA in the analysis of unbalanced multifactorial designs." *Journal of Chemometrics* 31.6 (2017): e2895.
 

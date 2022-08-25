@@ -1,0 +1,478 @@
+---
+title: "ASCA Decomposition of Synthetic Count Data"
+author: "Pietro Franceschi"
+output: github_document
+---
+
+## Introduction
+
+To illustrate the use of gASCA in the analysis of count data we will
+consider a synthetic dataset which is available as a part of the
+package installation. This vignette will be also used to show how to use
+gg-style plotting to visualize the results of the gASCA analyses
+
+## The dataset
+
+The synthetic dataset was simulated to mimic the results of a hypothetical
+experiment where the abundance of 15 species is measured over time
+across different treatments, with the following design:
+
+-   15 count variables (e.g. species, identified as `s1 .. s15`)
+-   2 factor design (5 time points, 3 treatments)
+-   10 replicates
+
+The example dataset was designed to have two latent variables (LV) for 
+the time factor and one for the treatment.
+
+Considering the 15 variables:
+
+-   The first four are responsive to the time factor. `s1` and `s2`
+    mirrors LV1, `s3` and `s4` are linked to LV2.
+-   `s5` and `s6` are affected by the treatment factor.
+-   `s7` and `s10` are also sensitive to the two LVs of the interaction. In other words,
+    for them the effect of treatment depends on time.
+-   The remaining variables contain only noise.
+
+The dataset is included in the package as a two element list containing
+the count matrix `synth_count_data$counts` and a data frame holding the
+association between the 150 samples and the design factors
+(`synth_count_data$design`).
+
+A detailed description of how the synthetic dataset was simulated is included in one of the 
+package vignettes.
+
+
+```{r}
+## load the libraries
+library(gASCA)
+
+## load the dataset
+data("synth_count_data")
+
+## show a compact representation of the structure of the dataset
+str(synth_count_data)
+```
+
+
+In this synthetic dataset we are dealing with a design with 5 time points and three treatments
+
+```{r}
+## time
+unique(synth_count_data$design$time)
+```
+
+```{r}
+## time
+unique(synth_count_data$design$treatment)
+```
+
+The following plot shows the distribution of the counts for variable `s1` as a function of the design factors
+
+
+```{r fig.height=5, fig.width=7}
+
+
+data_df <- cbind.data.frame(synth_count_data$design,synth_count_data$counts)
+
+stripchart(s1 ~ time, data = data_df[data_df$treatment =="B1",], vertical = TRUE, pch = 1, method = "jitter", 
+           col = "orange", main = "S1", ylab = "Counts")
+stripchart(s1 ~ time, data = data_df[data_df$treatment =="B2",], vertical = TRUE, pch = 1, method = "jitter", col = "steelblue", add = TRUE)
+stripchart(s1 ~ time, data = data_df[data_df$treatment =="B3",], vertical = TRUE, pch = 1, method = "jitter", col = "red", add = TRUE)
+legend("topleft", legend=c("Treat B1", "Treat B2", "Treat B3"),
+       col=c("orange","steelblue","red"), lty = 1, bty = "n")
+```
+
+
+The effect of time on this variable is clear. 
+
+## Performing the decomposition
+
+The function which performs the gASCA decomposition is `ASCA_decompose`
+and its results are organized in a list. To run the function it is
+necessary to provide:
+
+* a `matrix` or a `data.frame` with the counts;
+* a `data.frame` with the association between the samples and the design. Beware that numeric columns will results in a decomposition error!
+* a formula (actually a character vector) which specify the form of the decomposition;
+* a `list` with the parameters which will be passed to the `glm` call;
+* a character vector specifying the type of errors which will be returned by `glm`;
+
+The synthetic data consists of counts so the natural choice is to run a Poisson glm. The formula specifies a
+3 term decomposition accounting for the effects of `time`, `treatment` and their interaction. Within `ASCA-decompose` the formula has to be
+specified following the standard `glm` syntax.
+
+```{r}
+## perform the decomposition
+asca0 <- ASCA_decompose(
+  d = synth_count_data$design,
+  x = synth_count_data$counts, 
+  f = "time + treatment + time:treatment",
+  glm_par = list(family = poisson()))
+```
+
+
+Let’s give a look to the structure of the `asca0` object
+
+```{r}
+str(asca0)
+```
+
+
+For a detailed description of the elements of the list the reader could refer to the documentation. The main output of the function is a list
+which holds the result of the decomposition (`asca0$decomposition`).
+Each element of this list is a matrix containing the expected values estimated by the glm model of the individual variables. Each
+decomposition matrix holds samples as rows and variables as columns. Among the other terms of the output we would like to highlight:
+
+*`pseudoR2`: a vector holding the pseudo $R^2$ of the individual univariate models, which can be used to assess the level of
+fit of the proposed decomposition on each individual variable; 
+*`varimp`: a matrix holding the importance of each variable for the different decomposition terms. The variable importance is defined as the norm
+of the vector composed by the estimated expected values. It is important to point out that this type of variable importance can be biased in
+presence of log link functions and for variables showing large fraction of zeroes;
+*`terms_L2`: a vector holding the Frobenius norm of the decomposition matrices.
+
+$$
+\lVert Y \rVert_{Frobenius} = \sqrt{\sum_{ij} \lvert y_{ij} \rvert^2} 
+$$
+
+The L2-norm and the `varimp` can be used to compare the importance of the different variables and decomposition terms. Due to the characteristics of the matrix norm, this measure of importance is also biased for non gaussian link functions and large fraction of zeroes.
+
+For a detailed description of the individual elements of the decomposition list the user can refer to the package documentation.
+
+## Validation
+
+In terms of matrix algebra, the ASCA decomposition of a matrix *X* can
+be interpreted as a data model
+
+$$
+Y = Y_{A} + Y_{B} + Y_{C} + ... + E
+$$
+
+The significance of this decomposition can then be assessed by constructing an empirical null distribution of the norms of each term by
+repeatedly (and independently) permuting the design labels. The rationale behind this idea is to assess how likely is to obtain the
+observed norms only by chance. Permutation can be applied both to the L2-norm of the individual terms and to the estimates of variable
+importance. Unfortunately, as already discussed, in the case of count data, this type of approach may be biased in presence of a large
+fraction of zeroes. As a partial alternative, here we propose to use the same strategy to used assess the responsiveness of the
+individual variables to the model in terms of pseudo $R^{2}$, defined as
+
+$$
+R^{2}_{pseudo} = 1 - {deviance\_{residual}/deviance\_{null}}
+$$
+
+
+As for the conventional $R^{2}$, values closer to 1 indicate a better fit. Conversely, values closer to 0 are obtained if the residual
+deviance of the model is comparable with the deviance of the null model and this is the indication that the proposed model is not a clear
+improvement in comparison to the null model.
+
+The idea is to identify which variables are significantly affected by the design and then to limit the multivariate decomposition to them.
+
+In the `gASCA` package the permutation based approach is provided by the `ASCA_permutation` function, which requires as input the results of
+`ASCA_decompose`, the number of independent permutations (100 by default) and the empirical quantile used to judge the significance (0.95 by
+default).
+
+Let's now run the validation
+
+```{r include=FALSE}
+asca0_validation <- ASCA_permutation(asca0, turns = 100, qt = 0.95)
+```
+
+
+The `asca0_validation` holds the quantiles of the empirical null distribution obtained by permutation. The following plot shows the
+results of the significance test of the L2-norm of the individual terms.
+
+
+```{r}
+barplot(asca0$terms_L2, col = "steelblue", main = "Term L2 norm", border = NA)
+barplot(asca0_validation$L2_qt, col = "#8f1402", border = NA, add = TRUE)
+```
+
+The red rectangle indicate the 95 percentile of the null distribution of the norm for each term. In this case the decomposition turns out to be
+significant for all terms, and all three design factors show a comparable relevance in the decomposition.
+
+In terms of the variable importance for the three factors, instead:
+
+```{r fig.height=3, fig.width=10}
+par(mfrow = c(1,3))
+barplot(asca0$varimp[,1], col = "steelblue", main = "Variable importance: time", border = NA)
+barplot(asca0_validation$varimp_qt[,1], col = "#8f1402", border = NA, add = TRUE)
+barplot(asca0$varimp[,2], col = "steelblue", main = "Variable importance: treatment", border = NA)
+barplot(asca0_validation$varimp_qt[,2], col = "#8f1402", border = NA, add = TRUE)
+barplot(asca0$varimp[,3], col = "steelblue", main = "Variable importance: time:treatment", border = NA)
+barplot(asca0_validation$varimp_qt[,3], col = "#8f1402", border = NA, add = TRUE)
+```
+
+As before, the red bars indicate the empirical quantile of the variable importance upon permutation of the design. The picture we get with this
+analysis is in line with the characteristics of the simulated dataset: only the first four species are significantly responding to the *time* factor; s5 and s6, instead are important for *treatment* and s7 .. s10 for the *interaction*. 
+
+The following plot shows the result of the model fit assessment in terms of pseudo $R^{2}$:
+
+```{r fig.height=3, fig.width=7}
+barplot(asca0$pseudoR2, col = "steelblue", main = "Univariate model fit", border = NA, ylab = "pseudo R2", ylim = c(0,1))
+barplot(asca0_validation$R2_qt, col = "#8f1402", border = NA, add = TRUE)
+```
+
+
+Also here the results are coherent with the design of the synthetic dataset: the first 10 variables shows a significant
+pseudo-$R^{2}$ and this is not only indicating that they are significantly responding to the design, but also that the proposed model
+is capturing a large fraction of the data variability. It is also interesting to observe that, not unexpectedly, the univariate null
+quantiles are similar for all the 10 variables.
+
+As already discussed, the previous results can be used to restrict the analysis to the responsive variables. In the `gASCA` package the decomposition can be trimmed by using the `ASCA_trim_vars()` function:
+
+```{r}
+focus_dec <- ASCA_trim_vars(asca0$decomposition, keep = 1:10)
+```
+
+
+## Analysis of the decomposition terms
+
+### Eigenvectors and Multivariate Decomposition
+
+#### Time
+
+Let’s now focus on the three decomposition matrices in terms of their multivariate latent factors. Depending on the term, these LV can be
+interpreted as “eigentrends” (for time) or “eigentreatments” (for treatment) and they are actually what we would like to interpret.
+Remember that the rank of the matrix associated to each factor is determined by the number of levels of each factor because the
+decomposition matrices are constructed with the model expected values. The number of LVs will be then equal to the number of factors minus one.
+
+As an example, this is the set of predicted values for the time factor of variable `s1`
+
+
+```{r}
+plot(asca0$decomposition$time[,"s1"], ylab = "I", xlab = "Sample Index", pch = 19, col = "steelblue")
+```
+
+The presence of a limited number of constant values is coherent with the levels of the time factor, while the scale on the y axis shows that
+predictions are performed in the linear predictor space. Since the *time* factor has 5 levels the rank of the matrix will be four. We then
+expect four eigentrends. Their relative importance is proportional to the individual eigenvalues.
+
+The SVD decomposition of the ASCA array is performed by the `ASCA_svd` function.
+
+```{r}
+asca0_svd <- ASCA_svd(focus_dec)
+```
+
+
+Also here the result is a list with each element holding the results of the svd of the single decomposition terms performed by
+using the `prcomp` function of base R. As in a usual PCA analysis, the amount of explained variability (square of the standard deviation) can
+be used to identify how many eigentrends are needed to present an informative representation of the overall matrix.
+This type of representation is known as *scree plot*.
+
+Let’s first consider the *time* factor. The following screeplot can be used to identify the number of relevant eigentrends:
+
+```{r}
+plot(asca0_svd$time, col = "#4682b490", main = "Screeplot: time", npcs = 4)
+```
+
+Apparently two LVs are able to capture the global structure of the data. Let’s visualize the two eigentrends
+
+```{r}
+## reduce to a set of individual values compensating for potential numeric inaccuracies
+eigentrends <- unique(cbind.data.frame(time = synth_count_data$design$time,
+                                       LV1 = round(asca0_svd$time$x[,"PC1"],2),
+                                       LV2 = round(asca0_svd$time$x[,"PC2"],2)))
+
+eigentrends
+```
+
+```{r fig.height=3, fig.width=10}
+par(mfrow = c(1,2))
+plot(LV1~ seq_along(LV1), data = eigentrends, 
+     xaxt = 'n', type = "b", col = "steelblue", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #1")
+axis(1, at=seq_along(eigentrends$LV1), labels=eigentrends$time)
+plot(LV2~ seq_along(LV2), data = eigentrends, 
+     xaxt = 'n', type = "b", col = "orange", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #2")
+axis(1, at=seq_along(eigentrends$LV2), labels=eigentrends$time)
+```
+
+As expected, the first eigentrend is characterized by a steady increase which contrasts with the pattern of the second LV with a “U” shaped profile. In the synthetic data the actual trend of LV2 for the time factor is opposite, but this simply results from the sign indetermination of PCA. The loadings will tell which variables are mainly associated to them.
+
+```{r fig.height=4, fig.width=10}
+par(mfrow = c(1,2))
+barplot(asca0_svd$time$rotation[,1], col = "steelblue", main = "Loadingsplot: eigentrend #1")
+barplot(asca0_svd$time$rotation[,2], col = "orange", main = "Loadingsplot: eigentrend #2")
+```
+In keeping with the characteristics of the synthetic data, s1 and s2 are contributing strongly to the increasing eigentrend, while s3 and s4 mainly characterize the second LV. Also the intensity of the loadings correctly reflects the values used in the generation of the synthetic dataset. Further supporting the coherence of these results, below we show the real time trends of the measured values for s1 and s3:
+
+
+```{r fig.width=8, fig.height = 3}
+par(mfrow = c(1,2))
+stripchart(s1 ~ time, data = data_df, vertical = TRUE, pch = 1, method = "jitter", 
+           col = "steelblue", main = "S1", ylab = "Counts")
+stripchart(s3 ~ time, data = data_df, vertical = TRUE, pch = 1, method = "jitter", 
+           col = "orange", main = "S3", ylab = "Counts")
+```
+
+#### Treatment
+
+The treatment factor has 3 levels so a maximum of 2 LVs is expected to be relevant. As before, the screeplot will highlight the individual contribution of the two eigentreatments
+
+```{r}
+plot(asca0_svd$treatment, col = "#4682b490", main = "Screeplot: treatment", npcs = 2)
+```
+
+Nonetheless, as expected, only one LV is relevant here. In the following plot the profile of the eigentreatment and its loadings are shown:
+
+```{r}
+## reduce to a set of individual values compensating for potential numeric inaccuracies
+eigentreatments <- unique(cbind.data.frame(treatment = synth_count_data$design$treatment,
+                                       LV1 = round(asca0_svd$treatment$x[,"PC1"],2)))
+
+eigentreatments
+```
+
+
+```{r fig.height=3, fig.width=10}
+par(mfrow = c(1,2))
+barplot(LV1~treatment, data = eigentreatments, col = "steelblue", main = "Eigentreatment #1")
+barplot(asca0_svd$treatment$rotation[,1], col = "steelblue", main = "Loadingsplot: eigentrend #1")
+```
+
+As before, this is perfectly in line with the characteristics of the synthetic dataset. 
+
+
+#### Interaction
+
+The last element of the decomposition is the interaction. Here the number of possible LVs is large, let's start with the screeplot
+
+```{r}
+plot(asca0_svd$`time:treatment`, col = "#4682b490", main = "Screeplot: interaction")
+```
+
+Here, 2 components are able to capture almost all the variance, with the first eigenvector showing a prominent role. Let's look to the shape of the two components:
+
+```{r}
+## reduce to a set of individual values compensating for potential numeric inaccuracies
+eigentrends_int <- unique(cbind.data.frame(time = synth_count_data$design$time,
+                                           treatment = synth_count_data$design$treatment,
+                                       LV1 = round(asca0_svd$`time:treatment`$x[,"PC1"],2),
+                                       LV2 = round(asca0_svd$`time:treatment`$x[,"PC2"],2)))
+
+eigentrends_int
+```
+
+
+```{r eval=FALSE, fig.height=3, fig.width=10}
+par(mfrow = c(1,2))
+
+with(eigentrends_int[eigentrends_int$treatment == "B1",], plot(LV1 ~ as.numeric(factor(time)), 
+     xaxt = 'n', type = "b", col = "orange", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #1", ylim = c(-2.5,2.5)))
+with(eigentrends_int[eigentrends_int$treatment == "B2",], lines(LV1 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "steelblue", pch = 19, xlab = "time", cex = 1))
+with(eigentrends_int[eigentrends_int$treatment == "B3",], lines(LV1 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "red", pch = 19, xlab = "time", cex = 1))
+axis(1, at=as.numeric(factor(unique(eigentrends_int$time))), labels=levels(factor(eigentrends_int$time)))
+
+
+
+
+with(eigentrends_int[eigentrends_int$treatment == "B1",], plot(LV2 ~ as.numeric(factor(time)), 
+     xaxt = 'n', type = "b", col = "orange", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #2", ylim = c(-1.5,1.5)))
+with(eigentrends_int[eigentrends_int$treatment == "B2",], lines(LV2 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "steelblue", pch = 19, xlab = "time", cex = 1))
+with(eigentrends_int[eigentrends_int$treatment == "B3",], lines(LV2 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "red", pch = 19, xlab = "time", cex = 1))
+axis(1, at=as.numeric(factor(unique(eigentrends_int$time))), labels=levels(factor(eigentrends_int$time)))
+
+legend("bottomright", legend=c("Treat B1", "Treat B2", "Treat B3"),
+       col=c("orange","steelblue","red"), lty = 1, bty = "n", cex = 0.8)
+
+```
+
+Also in this case, results are in line with the characteristics of the synthetic data. The larger eigentrend shows a different temporal trend of B3 in comparison to the other two treatments. LV2, instead, differentiates B2 from B1 and B3. Interestingly, both the magnitude of the scores and the variable importance indicate that the first eigentrend has a larger impact on the structure of the data. In terms of loadings:
+
+```{r fig.height=3, fig.width=10}
+par(mfrow = c(1,2))
+barplot(asca0_svd$`time:treatment`$rotation[,1], col = "steelblue", main = "Loadingsplot: eigentrend #1")
+barplot(asca0_svd$`time:treatment`$rotation[,2], col = "orange", main = "Loadingsplot: eigentrend #2")
+```
+
+The reconstruction follows the structure of the data, with the exception being the direction (sign) of the effect, 
+due to the sign indetermination of PCA.
+
+
+### Combining terms
+
+The function `ASCA_combine_terms` allows the combination of different factor matrices. The function accepts as input the output of
+`ASCA_decomposition` and a character vector specifying which terms should be combined.
+
+```{r}
+## combine two terms
+asca0_comb <- ASCA_combine_terms(asca0, c("time","time:treatment"))
+
+
+## perform the svd of the combined decomposition removing unresponsive variables
+asca0_comb_svd <- ASCA_svd(ASCA_trim_vars(asca0_comb$decomposition, keep = 1:10))
+```
+
+
+Let's now focus on the LVs of the combined terms. 
+
+```{r}
+## here we use the base scree plot
+plot(asca0_comb_svd$`time+time:treatment`, main = "time + time:treatment", col = "steelblue")
+```
+
+The screeplot shows that the structure of the combined term is well characterized by three latent variables which are shown in the following plot:
+
+```{r}
+## reduce to a set of individual values compensating for potential numeric inaccuracies
+eigencomb <- unique(cbind.data.frame(synth_count_data$design,
+                                       LV1 = round(asca0_comb_svd$`time+time:treatment`$x[,"PC1"],2),
+                                       LV2 = round(asca0_comb_svd$`time+time:treatment`$x[,"PC2"],2),
+                                       LV3 = round(asca0_comb_svd$`time+time:treatment`$x[,"PC3"],2)))
+
+eigencomb
+```
+
+
+```{r eval=FALSE, fig.height=3, fig.width=13}
+par(mfrow = c(1,3))
+with(eigencomb[eigencomb$treatment == "B1",], plot(LV1 ~ as.numeric(factor(time)), 
+     xaxt = 'n', type = "b", col = "orange", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #1", ylim = c(-3.5,2.5)))
+with(eigencomb[eigencomb$treatment == "B2",], lines(LV1 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "steelblue", pch = 19, xlab = "time", cex = 1))
+with(eigencomb[eigencomb$treatment == "B3",], lines(LV1 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "red", pch = 19, xlab = "time", cex = 1))
+
+axis(1, at=as.numeric(factor(unique(eigencomb$time))), labels=levels(factor(eigencomb$time)))
+legend("bottomright", legend=c("Treat B1", "Treat B2", "Treat B3"),
+       col=c("orange","steelblue","red"), lty = 1, bty = "n")
+
+
+with(eigencomb[eigencomb$treatment == "B1",], plot(LV2 ~ as.numeric(factor(time)), 
+     xaxt = 'n', type = "b", col = "orange", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #2", ylim = c(-3.5,2.5)))
+with(eigencomb[eigencomb$treatment == "B2",], lines(LV2 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "steelblue", pch = 19, xlab = "time", cex = 1))
+with(eigencomb[eigencomb$treatment == "B3",], lines(LV2 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "red", pch = 19, xlab = "time", cex = 1))
+
+axis(1, at=as.numeric(factor(unique(eigencomb$time))), labels=levels(factor(eigencomb$time)))
+
+
+with(eigencomb[eigencomb$treatment == "B1",], plot(LV3 ~ as.numeric(factor(time)), 
+     xaxt = 'n', type = "b", col = "orange", pch = 19, xlab = "time", cex = 1, main = "Eigentrend #3", ylim = c(-3.5,2.5)))
+with(eigencomb[eigencomb$treatment == "B2",], lines(LV3 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "steelblue", pch = 19, xlab = "time", cex = 1))
+with(eigencomb[eigencomb$treatment == "B3",], lines(LV3 ~ as.numeric(factor(time)),
+                                                  type = "b", col = "red", pch = 19, xlab = "time", cex = 1))
+
+axis(1, at=as.numeric(factor(unique(eigencomb$time))), labels=levels(factor(eigencomb$time)))
+
+
+
+```
+
+These are, instead, the plots of the loadings:
+
+
+```{r fig.height=3, fig.width=13}
+par(mfrow = c(1,3))
+barplot(asca0_comb_svd$`time+time:treatment`$rotation[,1], col = "steelblue", main = "Loadingsplot: eigentrend #1")
+barplot(asca0_comb_svd$`time+time:treatment`$rotation[,2], col = "steelblue", main = "Loadingsplot: eigentrend #2")
+barplot(asca0_comb_svd$`time+time:treatment`$rotation[,3], col = "steelblue", main = "Loadingsplot: eigentrend #3")
+```
+
+
+coherently with what was observed for the *time* factor, the first LV of the combined decomposition shows a steady increase which is now modulated by treatment B3 in the interaction term. The inspection of the loadings supports this interpretation, s1 and s2 are indeed - by design - the species showing an increase over time. s7 and s8 are also partially contributing to this trend and their contribution differentiates B3 from B1 and B2. LV2 turns out to be similar to LV1 of the interaction term discussed previously. Similarly, s7 and s8 are the most influential variables, but now a residual contribution of s1 and s2 is also visible, which accounts for the slight overall time trend visible in the three treatment traces. The last LV is mirroring the trend visible in the LV2 of the *time* factor, this is clearly confirmed from the loadings plot.
+
+

@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,23 +33,17 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">gASCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="../index.html">
-    <span class="fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -55,6 +51,18 @@
   <ul class="dropdown-menu" role="menu">
 <li>
       <a href="../articles/Asca_dec_count_data.html">ASCA Decomposition of Synthetic Count Data</a>
+    </li>
+    <li>
+      <a href="../articles/Asca_dec_count_data_tidy.html">Plotting gASCA results with ggplot and tidyverse</a>
+    </li>
+    <li>
+      <a href="../articles/BBS_data_preparation.html">BBS data preparation</a>
+    </li>
+    <li>
+      <a href="../articles/BBS_gASCA_analysis.html">gASCA analysis of the BBS dataset</a>
+    </li>
+    <li>
+      <a href="../articles/synthetic_dataset.html">Synthetic_Dataset</a>
     </li>
   </ul>
 </li>
@@ -69,11 +77,12 @@
 
       
 
-      </header><script src="Asca_dec_count_data_files/header-attrs-2.10/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>ASCA Decomposition of Synthetic Count Data</h1>
-                        <h4 class="author">Pietro Franceschi</h4>
+                        <h4 data-toc-skip class="author">Pietro
+Franceschi</h4>
             
       
       
@@ -83,457 +92,604 @@
 
     
     
-<div id="introduction" class="section level2">
-<h2 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h2>
-<p>To illustrate the use of ASCA in the analysis of count data we will considered a synthetic dataset which is available as a part of the package installation. This vignette will be also used to show how to use gg-style plotting to visualize the results of the ASCA analysis</p>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
+<p>To illustrate the use of gASCA in the analysis of count data we will
+consider a synthetic dataset which is available as a part of the package
+installation. This vignette will be also used to show how to use
+gg-style plotting to visualize the results of the gASCA analyses</p>
 </div>
-<div id="the-dataset" class="section level2">
-<h2 class="hasAnchor">
-<a href="#the-dataset" class="anchor"></a>The dataset</h2>
-<p>The synthetic data were ***</p>
-<div id="experimental-design" class="section level3">
-<h3 class="hasAnchor">
-<a href="#experimental-design" class="anchor"></a>Experimental design</h3>
+<div class="section level2">
+<h2 id="the-dataset">The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
+</h2>
+<p>The synthetic dataset was simulated to mimic the results of a
+hypothetical experiment where the abundance of 15 species is measured
+over time across different treatments, with the following design:</p>
 <ul>
-<li>10 count variables (identified as <code>s1 .. s10</code>)</li>
+<li>15 count variables (e.g. species, identified as
+<code>s1 .. s15</code>)</li>
 <li>2 factor design (5 time points, 3 treatments)</li>
 <li>10 replicates</li>
 </ul>
-<p>The example dataset was designed to have two latent variables for the time factor and one for the treatment.</p>
-<p>Considering the 10 variables:</p>
+<p>The example dataset was designed to have two latent variables (LV)
+for the time factor and one for the treatment.</p>
+<p>Considering the 15 variables:</p>
 <ul>
-<li>the first four are responsive to the time factor. <code>s1</code> and <code>s2</code> mirrors LV1, <code>s3</code> and <code>s4</code> are linked to LV2.</li>
+<li>The first four are responsive to the time factor. <code>s1</code>
+and <code>s2</code> mirrors LV1, <code>s3</code> and <code>s4</code> are
+linked to LV2.</li>
 <li>
-<code>s5</code> and <code>s6</code> are affected by the treatment factor.</li>
+<code>s5</code> and <code>s6</code> are affected by the treatment
+factor.</li>
 <li>
-<code>s1</code> and <code>s2</code> are also sensitive to the interaction. In other words, for them the effect of treatment depends on time.</li>
+<code>s7</code> and <code>s10</code> are also sensitive to the two
+LVs of the interaction. In other words, for them the effect of treatment
+depends on time.</li>
 <li>The remaining variables contain only noise.</li>
 </ul>
-<p>The dataset is included in the package as a two element list containing the count matrix <code>synth_count_data$counts</code> and a data frame holding the association between the 150 samples and the design factors (<code>synth_count_data$design</code>)</p>
+<p>The dataset is included in the package as a two element list
+containing the count matrix <code>synth_count_data$counts</code> and a
+data frame holding the association between the 150 samples and the
+design factors (<code>synth_count_data$design</code>).</p>
+<p>A detailed description of how the synthetic dataset was simulated is
+included in one of the package vignettes.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## load the libraries</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">gASCA</span><span class="op">)</span>
-<span class="co">#&gt; Loading required package: parallel</span>
-<span class="co">#&gt; Loading required package: Matrix</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span>
-<span class="co">#&gt; Warning: replacing previous import 'lifecycle::last_warnings' by</span>
-<span class="co">#&gt; 'rlang::last_warnings' when loading 'pillar'</span>
-<span class="co">#&gt; Warning: replacing previous import 'lifecycle::last_warnings' by</span>
-<span class="co">#&gt; 'rlang::last_warnings' when loading 'tibble'</span>
-<span class="co">#&gt; Warning: replacing previous import 'lifecycle::last_warnings' by</span>
-<span class="co">#&gt; 'rlang::last_warnings' when loading 'hms'</span>
-<span class="co">#&gt; ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</span>
-<span class="co">#&gt; ✓ ggplot2 3.3.5     ✓ purrr   0.3.4</span>
-<span class="co">#&gt; ✓ tibble  3.1.4     ✓ dplyr   1.0.7</span>
-<span class="co">#&gt; ✓ tidyr   1.1.3     ✓ stringr 1.4.0</span>
-<span class="co">#&gt; ✓ readr   2.0.1     ✓ forcats 0.5.1</span>
-<span class="co">#&gt; ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──</span>
-<span class="co">#&gt; x tidyr::expand() masks Matrix::expand()</span>
-<span class="co">#&gt; x dplyr::filter() masks stats::filter()</span>
-<span class="co">#&gt; x dplyr::lag()    masks stats::lag()</span>
-<span class="co">#&gt; x tidyr::pack()   masks Matrix::pack()</span>
-<span class="co">#&gt; x tidyr::unpack() masks Matrix::unpack()</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/slowkow/ggrepel">ggrepel</a></span><span class="op">)</span>
-
-<span class="co">## load the dataset</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"synth_count_data"</span><span class="op">)</span>
-
-<span class="co">## show a compact representation of the structure of the dataset</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">)</span>
-<span class="co">#&gt; List of 2</span>
-<span class="co">#&gt;  $ counts: int [1:150, 1:10] 0 0 0 1 0 2 1 1 1 0 ...</span>
-<span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. ..$ : NULL</span>
-<span class="co">#&gt;   .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;  $ design:'data.frame':  150 obs. of  2 variables:</span>
-<span class="co">#&gt;   ..$ time     : chr [1:150] "t1" "t1" "t1" "t1" ...</span>
-<span class="co">#&gt;   ..$ treatment: chr [1:150] "A" "A" "A" "A" ...</span></code></pre></div>
-<p>In this synthetic dataset we are dealing with a design with 5 time points and three treatments</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## time</span>
-<span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span><span class="op">)</span>
-<span class="co">#&gt; [1] "t1" "t2" "t3" "t4" "t5"</span>
-
-<span class="co">## treatment</span>
-<span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span>
-<span class="co">#&gt; [1] "A" "B" "C"</span></code></pre></div>
-<p>The following plot shows the distribution of the counts for variable <code>s1</code> as a function of the design factors</p>
+<code class="sourceCode R"><span><span class="co">## load the libraries</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">gASCA</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## load the dataset</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"synth_count_data"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## show a compact representation of the structure of the dataset</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## List of 2</span></span>
+<span><span class="co">##  $ counts: int [1:150, 1:15] 0 1 4 2 1 2 2 0 1 1 ...</span></span>
+<span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. ..$ : NULL</span></span>
+<span><span class="co">##   .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##  $ design:'data.frame':  150 obs. of  2 variables:</span></span>
+<span><span class="co">##   ..$ time     : chr [1:150] "t0" "t0" "t0" "t0" ...</span></span>
+<span><span class="co">##   ..$ treatment: chr [1:150] "B1" "B1" "B1" "B1" ...</span></span></code></pre>
+<p>In this synthetic dataset we are dealing with a design with 5 time
+points and three treatments</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">tibble</span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,
-       <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">s1</span>, fill <span class="op">=</span> <span class="va">treatment</span><span class="op">)</span>,
-             position <span class="op">=</span> <span class="fu">position_dodge</span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">21</span>, size <span class="op">=</span><span class="fl">3</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">scale_fill_brewer</span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span>, name <span class="op">=</span> <span class="st">"Treatment"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Time"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Variable S1"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span>, 
-        legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<div class="figure">
-<img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-3-1.png" alt="Illustration of the effects of the experimental design on the counts of Species #1" width="700"><p class="caption">
-Illustration of the effects of the experimental design on the counts of Species #1
-</p>
-</div>
-<p>The effect of time on this variable is clear. Furthermore, <em>time</em> and <em>treatment</em> are also interacting as shown by the strong effect of treatment C at t4</p>
-</div>
-</div>
-<div id="performing-the-decomposition" class="section level2">
-<h2 class="hasAnchor">
-<a href="#performing-the-decomposition" class="anchor"></a>Performing the decomposition</h2>
-<p>The function which performs the ASCA decomposition is <code>ASCA_decompose</code> and its results are organized in a list. To run the function it is necessary to provide:</p>
-<ul>
-<li>a <code>matrix</code> or a <code>data.frame</code> with the counts;</li>
-<li>a <code>data.frame</code> with the association between the samples and the design. Beware that numeric columns will results in a decomposition error!</li>
-<li>a formula (actually a character vector) which specify the form of the decomposition;</li>
-<li>a <code>list</code> with the parameters which will be passed to the <code>glm</code> call;</li>
-<li>a character vector which specifies the type of errors which will be returned by <code>glm</code>;</li>
-</ul>
-<p>The synthetic data we are dealing with are counts so the natural choice is to run a Poisson glm. The formula specifies that we are looking for a 3 term decomposition accounting for the effects of <code>time</code>, <code>treatment</code> and their interaction. Within <code>ASCA-decompose</code> the formula have to be specified following the standard R syntax.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## perform the decomposition</span>
-<span class="va">asca0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_decompose.html">ASCA_decompose</a></span><span class="op">(</span>
-  d <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,
-  x <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span>, 
-  f <span class="op">=</span> <span class="st">"time + treatment + time:treatment"</span>,
-  glm_par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html">poisson</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<p>Let’s give a look to the structure of the <code>asca0</code> object</p>
+<code class="sourceCode R"><span><span class="co">## time</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "t0" "t1" "t2" "t3" "t4"</span></span></code></pre>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">)</span>
-<span class="co">#&gt; List of 14</span>
-<span class="co">#&gt;  $ decomposition:List of 3</span>
-<span class="co">#&gt;   ..$ time          : num [1:150, 1:10] -6.95 -6.95 -6.95 -6.95 -6.95 ...</span>
-<span class="co">#&gt;   .. ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span>
-<span class="co">#&gt;   .. .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;   ..$ treatment     : num [1:150, 1:10] 1.05 1.05 1.05 1.05 1.05 ...</span>
-<span class="co">#&gt;   .. ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span>
-<span class="co">#&gt;   .. .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;   ..$ time:treatment: num [1:150, 1:10] 4.45 4.45 4.45 4.45 4.45 ...</span>
-<span class="co">#&gt;   .. ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span>
-<span class="co">#&gt;   .. .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;  $ mu           : Named num [1:10] 0.936 2.957 4.007 5.002 5.996 ...</span>
-<span class="co">#&gt;   ..- attr(*, "names")= chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;  $ residuals    : num [1:150, 1:10] -0.6 -0.6 -0.6 0.4 -0.6 ...</span>
-<span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;  $ prediction   : num [1:150, 1:10] -0.511 -0.511 -0.511 -0.511 -0.511 ...</span>
-<span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;  $ pseudoR2     : Named num [1:10] 0.987 0.995 0.986 0.996 0.997 ...</span>
-<span class="co">#&gt;   ..- attr(*, "names")= chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;  $ glm_par      :List of 1</span>
-<span class="co">#&gt;   ..$ family:List of 12</span>
-<span class="co">#&gt;   .. ..$ family    : chr "poisson"</span>
-<span class="co">#&gt;   .. ..$ link      : chr "log"</span>
-<span class="co">#&gt;   .. ..$ linkfun   :function (mu)  </span>
-<span class="co">#&gt;   .. ..$ linkinv   :function (eta)  </span>
-<span class="co">#&gt;   .. ..$ variance  :function (mu)  </span>
-<span class="co">#&gt;   .. ..$ dev.resids:function (y, mu, wt)  </span>
-<span class="co">#&gt;   .. ..$ aic       :function (y, n, mu, wt, dev)  </span>
-<span class="co">#&gt;   .. ..$ mu.eta    :function (eta)  </span>
-<span class="co">#&gt;   .. ..$ initialize:  expression({  if (any(y &lt; 0))  stop("negative values not allowed for the 'Poisson' family")  n &lt;- rep.int(1, nobs| __truncated__</span>
-<span class="co">#&gt;   .. ..$ validmu   :function (mu)  </span>
-<span class="co">#&gt;   .. ..$ valideta  :function (eta)  </span>
-<span class="co">#&gt;   .. ..$ simulate  :function (object, nsim)  </span>
-<span class="co">#&gt;   .. ..- attr(*, "class")= chr "family"</span>
-<span class="co">#&gt;  $ res_type     : chr "response"</span>
-<span class="co">#&gt;  $ varimp       : num [1:10, 1:3] 46.088 24.899 14.319 14.42 0.154 ...</span>
-<span class="co">#&gt;   ..- attr(*, "dimnames")=List of 2</span>
-<span class="co">#&gt;   .. ..$ : chr [1:10] "s1" "s2" "s3" "s4" ...</span>
-<span class="co">#&gt;   .. ..$ : chr [1:3] "time" "treatment" "time:treatment"</span>
-<span class="co">#&gt;  $ terms_L2     : Named num [1:3] 56.2 25.2 41</span>
-<span class="co">#&gt;   ..- attr(*, "names")= chr [1:3] "time" "treatment" "time:treatment"</span>
-<span class="co">#&gt;  $ d            :'data.frame':   150 obs. of  2 variables:</span>
-<span class="co">#&gt;   ..$ time     : chr [1:150] "t1" "t1" "t1" "t1" ...</span>
-<span class="co">#&gt;   ..$ treatment: chr [1:150] "A" "A" "A" "A" ...</span>
-<span class="co">#&gt;  $ x            :'data.frame':   150 obs. of  10 variables:</span>
-<span class="co">#&gt;   ..$ s1 : int [1:150] 0 0 0 1 0 2 1 1 1 0 ...</span>
-<span class="co">#&gt;   ..$ s2 : int [1:150] 1 1 3 1 4 3 0 2 2 0 ...</span>
-<span class="co">#&gt;   ..$ s3 : int [1:150] 13 12 15 16 22 9 16 22 13 13 ...</span>
-<span class="co">#&gt;   ..$ s4 : int [1:150] 35 43 44 36 33 35 40 39 39 34 ...</span>
-<span class="co">#&gt;   ..$ s5 : int [1:150] 115 108 88 93 85 107 77 104 77 98 ...</span>
-<span class="co">#&gt;   ..$ s6 : int [1:150] 88 88 98 95 102 123 94 98 92 99 ...</span>
-<span class="co">#&gt;   ..$ s7 : int [1:150] 133 175 151 151 129 155 138 152 155 135 ...</span>
-<span class="co">#&gt;   ..$ s8 : int [1:150] 67 52 50 59 61 61 59 52 59 56 ...</span>
-<span class="co">#&gt;   ..$ s9 : int [1:150] 14 16 18 21 18 23 23 24 19 12 ...</span>
-<span class="co">#&gt;   ..$ s10: int [1:150] 8 3 5 6 5 7 8 8 6 10 ...</span>
-<span class="co">#&gt;  $ f            : chr "time + treatment + time:treatment"</span>
-<span class="co">#&gt;  $ combined     : NULL</span>
-<span class="co">#&gt;  $ linkinv      :function (eta)  </span>
-<span class="co">#&gt;  - attr(*, "class")= chr "ASCA_decomposition"</span></code></pre></div>
-<p>For a detailed description of the elements of the list the reader could refer to the documentation. The main output of the function is a list which holds the result of the decomposition (<code>asca0$decomposition</code>). Each matrix matrix contains the expected values estimated by the glm model of the individual variables. Printing the names helps understanding the structure of the array</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## matrix associated to the "time" factor</span>
-<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">rownames</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">decomposition</span><span class="op">$</span><span class="va">time</span><span class="op">)</span>
-<span class="co">#&gt;   [1] "1"   "2"   "3"   "4"   "5"   "6"   "7"   "8"   "9"   "10"  "11"  "12" </span>
-<span class="co">#&gt;  [13] "13"  "14"  "15"  "16"  "17"  "18"  "19"  "20"  "21"  "22"  "23"  "24" </span>
-<span class="co">#&gt;  [25] "25"  "26"  "27"  "28"  "29"  "30"  "31"  "32"  "33"  "34"  "35"  "36" </span>
-<span class="co">#&gt;  [37] "37"  "38"  "39"  "40"  "41"  "42"  "43"  "44"  "45"  "46"  "47"  "48" </span>
-<span class="co">#&gt;  [49] "49"  "50"  "51"  "52"  "53"  "54"  "55"  "56"  "57"  "58"  "59"  "60" </span>
-<span class="co">#&gt;  [61] "61"  "62"  "63"  "64"  "65"  "66"  "67"  "68"  "69"  "70"  "71"  "72" </span>
-<span class="co">#&gt;  [73] "73"  "74"  "75"  "76"  "77"  "78"  "79"  "80"  "81"  "82"  "83"  "84" </span>
-<span class="co">#&gt;  [85] "85"  "86"  "87"  "88"  "89"  "90"  "91"  "92"  "93"  "94"  "95"  "96" </span>
-<span class="co">#&gt;  [97] "97"  "98"  "99"  "100" "101" "102" "103" "104" "105" "106" "107" "108"</span>
-<span class="co">#&gt; [109] "109" "110" "111" "112" "113" "114" "115" "116" "117" "118" "119" "120"</span>
-<span class="co">#&gt; [121] "121" "122" "123" "124" "125" "126" "127" "128" "129" "130" "131" "132"</span>
-<span class="co">#&gt; [133] "133" "134" "135" "136" "137" "138" "139" "140" "141" "142" "143" "144"</span>
-<span class="co">#&gt; [145] "145" "146" "147" "148" "149" "150"</span>
-<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">decomposition</span><span class="op">$</span><span class="va">time</span><span class="op">)</span>
-<span class="co">#&gt;  [1] "s1"  "s2"  "s3"  "s4"  "s5"  "s6"  "s7"  "s8"  "s9"  "s10"</span></code></pre></div>
-<p>The 150 samples are organized along the first dimension, while the decomposition terms span the second dimension. The last dimension holds the experimental variables.</p>
-</div>
-<div id="validation" class="section level2">
-<h2 class="hasAnchor">
-<a href="#validation" class="anchor"></a>Validation</h2>
-<p>A permutation based approach has been proposed as a test of the significance of the ASCA decomposition. The rationale behind the idea is to empirically construct a set of null models by repeatedly (and independently) permuting the design labels. These null models can then be used to construct the empirical distribution (and quantiles) of almost all model outcomes.</p>
-<p>In the <code>gASCA</code> package the permutation based approach has been implemented. In particular it can be used to assess the significance of the following quantities</p>
-<ul>
-<li>the L2 norm of the decomposition terms, which assess the significance of each model</li>
-<li>the variable importance</li>
-<li>the null distribution of the univariate pseudo-R2, which can be seen as a proxy of the overall model fit for each variable</li>
-</ul>
-<p>The <code>ASCA_permutation</code> function, requires as input the results of <code>ASCA_decompose</code> the number of independent permutations (500 by default) and the empirical quantile used to judge the significance (0.95 by default).</p>
+<code class="sourceCode R"><span><span class="co">## time</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "B1" "B2" "B3"</span></span></code></pre>
+<p>The following plot shows the distribution of the counts for variable
+<code>s1</code> as a function of the design factors</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## perform the permutation based approach</span>
-<span class="va">asca0_validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_permutation.html">ASCA_permutation</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">)</span></code></pre></div>
-<p>The following plot shows the results of the validation on the L2 norm of the three decomposition terms.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_validation</span><span class="op">$</span><span class="va">L2_qt</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span>rownames <span class="op">=</span> <span class="st">"term"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">add_column</span><span class="op">(</span>actual <span class="op">=</span> <span class="va">asca0</span><span class="op">$</span><span class="va">terms_L2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>term <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">term</span>, levels <span class="op">=</span> <span class="va">term</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">term</span>, y <span class="op">=</span> <span class="va">actual</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_segment</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">term</span>, y <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">term</span>, yend <span class="op">=</span> <span class="va">actual</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">term</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"darkred"</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"term-L2"</span><span class="op">)</span> <span class="op">+</span> <span class="fu">xlab</span><span class="op">(</span><span class="st">"Term"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
-<p>In the previous plot the term L2 norms (blue dots) are compared with their 95th percentile on the 500 permuted dataset (red dots). In all three cases, the observed matrix norm is larger than the one which should be expected by chance and this indicate that the three terms are all significant, as expected for the synthetic dataset.</p>
-<p>In therms of variable importance the situation is the following:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0</span><span class="op">$</span><span class="va">varimp</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span>rownames <span class="op">=</span> <span class="st">"var"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="op">-</span><span class="va">var</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">left_join</span><span class="op">(</span><span class="va">asca0_validation</span><span class="op">$</span><span class="va">varimp_qt</span> <span class="op">%&gt;%</span> 
-              <span class="fu">as_tibble</span><span class="op">(</span>rownames <span class="op">=</span> <span class="st">"var"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-              <span class="fu">pivot_longer</span><span class="op">(</span><span class="op">-</span><span class="va">var</span>, values_to <span class="op">=</span> <span class="st">"value_qt"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>var <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">var</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">var</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">name</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">name</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_segment</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var</span>, y <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">var</span>, yend <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var</span>, y <span class="op">=</span> <span class="va">value_qt</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"darkred"</span>, size <span class="op">=</span> <span class="fl">2</span>, pch <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, scales <span class="op">=</span> <span class="st">"free"</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"Vecror Norm"</span><span class="op">)</span> <span class="op">+</span> <span class="fu">xlab</span><span class="op">(</span><span class="st">"Variable"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>
-<span class="co">#&gt; Joining, by = c("var", "name")</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
-<p>As before, the red dots indicate the empirical quantiles upon permutation of the design. The picture we get with this analysis is in line to the characteristics of the simulated dataset. In particular.</p>
+<code class="sourceCode R"><span><span class="va">data_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,<span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/stripchart.html" class="external-link">stripchart</a></span><span class="op">(</span><span class="va">s1</span> <span class="op">~</span> <span class="va">time</span>, data <span class="op">=</span> <span class="va">data_df</span><span class="op">[</span><span class="va">data_df</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span><span class="st">"B1"</span>,<span class="op">]</span>, vertical <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"jitter"</span>, </span>
+<span>           col <span class="op">=</span> <span class="st">"orange"</span>, main <span class="op">=</span> <span class="st">"S1"</span>, ylab <span class="op">=</span> <span class="st">"Counts"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/stripchart.html" class="external-link">stripchart</a></span><span class="op">(</span><span class="va">s1</span> <span class="op">~</span> <span class="va">time</span>, data <span class="op">=</span> <span class="va">data_df</span><span class="op">[</span><span class="va">data_df</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span><span class="st">"B2"</span>,<span class="op">]</span>, vertical <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"jitter"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/stripchart.html" class="external-link">stripchart</a></span><span class="op">(</span><span class="va">s1</span> <span class="op">~</span> <span class="va">time</span>, data <span class="op">=</span> <span class="va">data_df</span><span class="op">[</span><span class="va">data_df</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span><span class="st">"B3"</span>,<span class="op">]</span>, vertical <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"jitter"</span>, col <span class="op">=</span> <span class="st">"red"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, legend<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treat B1"</span>, <span class="st">"Treat B2"</span>, <span class="st">"Treat B3"</span><span class="op">)</span>,</span>
+<span>       col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"orange"</span>,<span class="st">"steelblue"</span>,<span class="st">"red"</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fl">1</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-4-1.png"><!-- --></p>
+<p>The effect of time on this variable is clear.</p>
+</div>
+<div class="section level2">
+<h2 id="performing-the-decomposition">Performing the decomposition<a class="anchor" aria-label="anchor" href="#performing-the-decomposition"></a>
+</h2>
+<p>The function which performs the gASCA decomposition is
+<code>ASCA_decompose</code> and its results are organized in a list. To
+run the function it is necessary to provide:</p>
 <ul>
-<li>As expected the first four variables are responsive to a different extent to the time factor</li>
-<li>S5 and s6 are correctly identified as sensitive to treatment. Unexpectedly, however, also s1 turns out to be responsive to treatment, but remember that s1 was affected by the interaction between the two main factors.</li>
-<li>As far as the interaction is concerned, only s1 seems to be significantly affected, with s2</li>
+<li>a <code>matrix</code> or a <code>data.frame</code> with the
+counts;</li>
+<li>a <code>data.frame</code> with the association between the samples
+and the design. Beware that numeric columns will results in a
+decomposition error!</li>
+<li>a formula (actually a character vector) which specify the form of
+the decomposition;</li>
+<li>a <code>list</code> with the parameters which will be passed to the
+<code>glm</code> call;</li>
+<li>a character vector specifying the type of errors which will be
+returned by <code>glm</code>;</li>
 </ul>
-<div id="univariate-model-fit" class="section level3">
-<h3 class="hasAnchor">
-<a href="#univariate-model-fit" class="anchor"></a>Univariate model fit</h3>
-<p>The last parameter which was included in the validation process is the pseudo-R2 of the set of univariate models. In classical ASCA, the inspection and the eigen decomposition of the residual matrix has proven to be useful and informative in identifying unmodeled patterns in the data. Unfortunately, this step it is not necessarily informative in glm based ASCA, since the matrix of residuals in the response space is not always easy to interpret (e.g the error matrix of a poisson ASCA of a matrix of species counts holds the difference between observed and predicted counts).<br>
-Here we propose to use a measure of univariate model fit at least to identify the set of variables which are less responsive to the experimental design. For glms, pseudo-<span class="math inline">\(R^{2}\)</span> is one of the possible measures of fit which is defined comparing the devicence of the fit of the proposed model with the one of a “null” constant model.</p>
+<p>The synthetic data consists of counts so the natural choice is to run
+a Poisson glm. The formula specifies a 3 term decomposition accounting
+for the effects of <code>time</code>, <code>treatment</code> and their
+interaction. Within <code>ASCA-decompose</code> the formula has to be
+specified following the standard <code>glm</code> syntax.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## perform the decomposition</span></span>
+<span><span class="va">asca0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_decompose.html">ASCA_decompose</a></span><span class="op">(</span></span>
+<span>  d <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,</span>
+<span>  x <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span>, </span>
+<span>  f <span class="op">=</span> <span class="st">"time + treatment + time:treatment"</span>,</span>
+<span>  glm_par <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">poisson</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Let’s give a look to the structure of the <code>asca0</code>
+object</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## List of 14</span></span>
+<span><span class="co">##  $ decomposition:List of 3</span></span>
+<span><span class="co">##   ..$ time          : num [1:150, 1:15] -1.49 -1.49 -1.49 -1.49 -1.49 ...</span></span>
+<span><span class="co">##   .. ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span></span>
+<span><span class="co">##   .. .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##   ..$ treatment     : num [1:150, 1:15] -0.0334 -0.0334 -0.0334 -0.0334 -0.0334 ...</span></span>
+<span><span class="co">##   .. ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span></span>
+<span><span class="co">##   .. .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##   ..$ time:treatment: num [1:150, 1:15] -0.0759 -0.0759 -0.0759 -0.0759 -0.0759 ...</span></span>
+<span><span class="co">##   .. ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span></span>
+<span><span class="co">##   .. .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##  $ mu           : Named num [1:15] 1.93 3.02 4.01 5 6 ...</span></span>
+<span><span class="co">##   ..- attr(*, "names")= chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##  $ residuals    : num [1:150, 1:15] -1.4 -0.4 2.6 0.6 -0.4 ...</span></span>
+<span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##  $ prediction   : num [1:150, 1:15] 0.336 0.336 0.336 0.336 0.336 ...</span></span>
+<span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. ..$ : chr [1:150] "1" "2" "3" "4" ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##  $ pseudoR2     : Named num [1:15] 0.907 0.958 0.964 0.978 0.998 ...</span></span>
+<span><span class="co">##   ..- attr(*, "names")= chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##  $ glm_par      :List of 1</span></span>
+<span><span class="co">##   ..$ family:List of 12</span></span>
+<span><span class="co">##   .. ..$ family    : chr "poisson"</span></span>
+<span><span class="co">##   .. ..$ link      : chr "log"</span></span>
+<span><span class="co">##   .. ..$ linkfun   :function (mu)  </span></span>
+<span><span class="co">##   .. ..$ linkinv   :function (eta)  </span></span>
+<span><span class="co">##   .. ..$ variance  :function (mu)  </span></span>
+<span><span class="co">##   .. ..$ dev.resids:function (y, mu, wt)  </span></span>
+<span><span class="co">##   .. ..$ aic       :function (y, n, mu, wt, dev)  </span></span>
+<span><span class="co">##   .. ..$ mu.eta    :function (eta)  </span></span>
+<span><span class="co">##   .. ..$ initialize:  expression({  if (any(y &lt; 0))  stop("negative values not allowed for the 'Poisson' family")  n &lt;- rep.int(1, nobs| __truncated__</span></span>
+<span><span class="co">##   .. ..$ validmu   :function (mu)  </span></span>
+<span><span class="co">##   .. ..$ valideta  :function (eta)  </span></span>
+<span><span class="co">##   .. ..$ simulate  :function (object, nsim)  </span></span>
+<span><span class="co">##   .. ..- attr(*, "class")= chr "family"</span></span>
+<span><span class="co">##  $ res_type     : chr "response"</span></span>
+<span><span class="co">##  $ varimp       : num [1:15, 1:3] 12.841 11.938 7.444 7.187 0.118 ...</span></span>
+<span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. ..$ : chr [1:15] "s1" "s2" "s3" "s4" ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:3] "time" "treatment" "time:treatment"</span></span>
+<span><span class="co">##  $ terms_L2     : Named num [1:3] 20.4 18 14.8</span></span>
+<span><span class="co">##   ..- attr(*, "names")= chr [1:3] "time" "treatment" "time:treatment"</span></span>
+<span><span class="co">##  $ d            :'data.frame':   150 obs. of  2 variables:</span></span>
+<span><span class="co">##   ..$ time     : chr [1:150] "t0" "t0" "t0" "t0" ...</span></span>
+<span><span class="co">##   ..$ treatment: chr [1:150] "B1" "B1" "B1" "B1" ...</span></span>
+<span><span class="co">##  $ x            :'data.frame':   150 obs. of  15 variables:</span></span>
+<span><span class="co">##   ..$ s1 : int [1:150] 0 1 4 2 1 2 2 0 1 1 ...</span></span>
+<span><span class="co">##   ..$ s2 : int [1:150] 3 2 7 5 8 4 6 7 6 4 ...</span></span>
+<span><span class="co">##   ..$ s3 : int [1:150] 19 23 37 38 37 23 31 29 24 29 ...</span></span>
+<span><span class="co">##   ..$ s4 : int [1:150] 75 67 89 67 74 68 60 70 74 64 ...</span></span>
+<span><span class="co">##   ..$ s5 : int [1:150] 95 99 100 91 94 95 107 103 85 100 ...</span></span>
+<span><span class="co">##   ..$ s6 : int [1:150] 86 100 106 86 106 99 117 93 108 112 ...</span></span>
+<span><span class="co">##   ..$ s7 : int [1:150] 344 371 330 350 324 332 337 373 340 335 ...</span></span>
+<span><span class="co">##   ..$ s8 : int [1:150] 123 121 132 120 125 115 142 155 119 111 ...</span></span>
+<span><span class="co">##   ..$ s9 : int [1:150] 25 15 19 19 14 16 12 24 15 20 ...</span></span>
+<span><span class="co">##   ..$ s10: int [1:150] 6 7 4 6 8 10 9 4 6 7 ...</span></span>
+<span><span class="co">##   ..$ s11: int [1:150] 384 378 411 407 428 394 400 413 416 422 ...</span></span>
+<span><span class="co">##   ..$ s12: int [1:150] 141 131 129 166 142 154 146 139 170 134 ...</span></span>
+<span><span class="co">##   ..$ s13: int [1:150] 2959 2951 2953 3008 2988 3045 2968 3032 2981 2990 ...</span></span>
+<span><span class="co">##   ..$ s14: int [1:150] 121 155 126 167 130 157 155 117 139 141 ...</span></span>
+<span><span class="co">##   ..$ s15: int [1:150] 16 19 21 26 19 21 17 20 26 22 ...</span></span>
+<span><span class="co">##  $ f            : chr "time + treatment + time:treatment"</span></span>
+<span><span class="co">##  $ combined     : NULL</span></span>
+<span><span class="co">##  $ linkinv      :function (eta)</span></span></code></pre>
+<p>For a detailed description of the elements of the list the reader
+could refer to the documentation. The main output of the function is a
+list which holds the result of the decomposition
+(<code>asca0$decomposition</code>). Each element of this list is a
+matrix containing the expected values estimated by the glm model of the
+individual variables. Each decomposition matrix holds samples as rows
+and variables as columns. Among the other terms of the output we would
+like to highlight:</p>
+<p><em><code>pseudoR2</code>: a vector holding the pseudo
+</em>R<em><sup>2</sup> of the individual univariate models, which can be
+used to assess the level of fit of the proposed decomposition on each
+individual variable; </em><code>varimp</code>: a matrix holding the
+importance of each variable for the different decomposition terms. The
+variable importance is defined as the norm of the vector composed by the
+estimated expected values. It is important to point out that this type
+of variable importance can be biased in presence of log link functions
+and for variables showing large fraction of zeroes;
+*<code>terms_L2</code>: a vector holding the Frobenius norm of the
+decomposition matrices.</p>
 <p><span class="math display">\[
-R^{2}_{pseudo} = 1 - \frac{deviance_{residuals}}{deviance_{null}}
+\lVert Y \rVert\_{Frobenius} = \sqrt{\sum\_{ij} \lvert y\_{ij} \rvert^2}
 \]</span></p>
-<p>In practical terms, the parameter gets closer to 1 if the deviance of the residuals of the proposed model is smaller than the one of a constant model.</p>
-<p>The “significance” of this parameter can also be assessed in the permutation test and the validation is included in the package functionality. In the package, the calculation of the pseudo-<span class="math inline">\(R^{2}\)</span> for the set of the measured variables is part of the output of the <code>ASCA_decompose</code> function. In the case of the synthetic dataset the trend of the pseudo_<span class="math inline">\(R^{2}\)</span> for the the variables and the results of the validation are shown in the following plot:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_validation</span><span class="op">$</span><span class="va">R2_qt</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span>rownames <span class="op">=</span> <span class="st">"var"</span><span class="op">)</span> <span class="op">%&gt;%</span>  
-  <span class="fu">add_column</span><span class="op">(</span>actual <span class="op">=</span> <span class="va">asca0</span><span class="op">$</span><span class="va">pseudoR2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>var <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">var</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">var</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var</span>, y <span class="op">=</span> <span class="va">actual</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_segment</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var</span>, y <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">var</span>, yend <span class="op">=</span> <span class="va">actual</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">var</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"darkred"</span>, size <span class="op">=</span> <span class="fl">3</span>, pch <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"pseudo-R2"</span><span class="op">)</span> <span class="op">+</span> <span class="fu">xlab</span><span class="op">(</span><span class="st">"Variable"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
-<p>Also here the blue dots represent the univariate model pseudo-<span class="math inline">\(R^{2}\)</span>, while the red dots shows its null 95th percentile. The first 6 variables shows a large and significant pseudo-<span class="math inline">\(R^{2}\)</span> and this is not only indicating that they are significantly responding to the design, but also that the proposed model is capturing a large fraction of the data variability. It is also interesting to observe that, not unexpectedly, the univariate null quantiles are similar for all the 10 variables.</p>
-<p>It is important to point out that when dealing with a glm with an identity link function, the overall model fit can still be inspected relying on the matrix of the residuals in the response space. As in classical ASCA, a PCA of this matrix is useful to perform a multivariate investigation of the unmodeled structure of the dataset. Bear in mind that in the case of dataset consisting of reasonably large counts, a gaussian modelling of the log-transformed values could give a good representation of the data structure.</p>
+<p>The L2-norm and the <code>varimp</code> can be used to compare the
+importance of the different variables and decomposition terms. Due to
+the characteristics of the matrix norm, this measure of importance is
+also biased for non gaussian link functions and large fraction of
+zeroes.</p>
+<p>For a detailed description of the individual elements of the
+decomposition list the user can refer to the package documentation.</p>
 </div>
-</div>
-<div id="analysis-of-the-decomposition-terms" class="section level2">
-<h2 class="hasAnchor">
-<a href="#analysis-of-the-decomposition-terms" class="anchor"></a>Analysis of the decomposition terms</h2>
-<div id="eigenvectors-and-multivariate-decomposition" class="section level3">
-<h3 class="hasAnchor">
-<a href="#eigenvectors-and-multivariate-decomposition" class="anchor"></a>Eigenvectors and Multivariate Decomposition</h3>
-<p>Let’s now analyse the three decomposition matrices in terms of their multivariate latent factors. Depending on the term these LV can be interpreted as “eigentrends” (for time) or “eigentreatment” (for treatment) and they are actually what we would like to interpret. Remember that the rank of the matrix associated to each factor is determined by the number of levels of each factor because the decomposition matrices are constructed with the model expected values. The number of LVs will be then equal to the number of factors minus one.</p>
-<p>As an example, this is the set of predicted values for the time factor of variable s1</p>
+<div class="section level2">
+<h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a>
+</h2>
+<p>In terms of matrix algebra, the ASCA decomposition of a matrix
+<em>X</em> can be interpreted as a data model</p>
+<p><em>Y</em> = <em>Y</em><sub><em>A</em></sub> + <em>Y</em><sub><em>B</em></sub> + <em>Y</em><sub><em>C</em></sub> + … + <em>E</em></p>
+<p>The significance of this decomposition can then be assessed by
+constructing an empirical null distribution of the norms of each term by
+repeatedly (and independently) permuting the design labels. The
+rationale behind this idea is to assess how likely is to obtain the
+observed norms only by chance. Permutation can be applied both to the
+L2-norm of the individual terms and to the estimates of variable
+importance. Unfortunately, as already discussed, in the case of count
+data, this type of approach may be biased in presence of a large
+fraction of zeroes. As a partial alternative, here we propose to use the
+same strategy to used assess the responsiveness of the individual
+variables to the model in terms of pseudo <em>R</em><sup>2</sup>,
+defined as</p>
+<p><em>R</em><sub><em>p<strong>s</strong>e<strong>u</strong>d<strong>o<em></em></strong></em></sub><sup>2</sup> = 1 − de<strong>v</strong>i<strong>a</strong>n<strong>c</strong>e_<em>r<strong>e</strong>s<strong>i</strong>d<strong>u</strong>a<strong>l<em>/</em>d</strong>e<strong>v</strong>i<strong>a</strong>n<strong>c</strong>e</em>_*n<strong>u</strong>l**l*</p>
+<p>As for the conventional <em>R</em><sup>2</sup>, values closer to 1
+indicate a better fit. Conversely, values closer to 0 are obtained if
+the residual deviance of the model is comparable with the deviance of
+the null model and this is the indication that the proposed model is not
+a clear improvement in comparison to the null model.</p>
+<p>The idea is to identify which variables are significantly affected by
+the design and then to limit the multivariate decomposition to them.</p>
+<p>In the <code>gASCA</code> package the permutation based approach is
+provided by the <code>ASCA_permutation</code> function, which requires
+as input the results of <code>ASCA_decompose</code>, the number of
+independent permutations (100 by default) and the empirical quantile
+used to judge the significance (0.95 by default).</p>
+<p>Let’s now run the validation</p>
+<p>The <code>asca0_validation</code> holds the quantiles of the
+empirical null distribution obtained by permutation. The following plot
+shows the results of the significance test of the L2-norm of the
+individual terms.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">decomposition</span><span class="op">$</span><span class="va">time</span><span class="op">[</span>,<span class="st">"s1"</span><span class="op">]</span>, ylab <span class="op">=</span> <span class="st">"I"</span>, xlab <span class="op">=</span> <span class="st">"Sample Index"</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
-<p>The presence of a limited number of constant values is coherent with the levels of the time factor, while the scale on the y axis shows that predictions are performed in the linear predictor space. Since the <em>time</em> factor has 5 levels the rank of the matrix will be four. We then expect four eigentrends. Their relative importance is proportional to the individual eigenvalues.</p>
-<p>The SVD decomposition of the ASCA array is performed by the <code>ASCA_svd</code> function.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">terms_L2</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Term L2 norm"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_validation</span><span class="op">$</span><span class="va">L2_qt</span>, col <span class="op">=</span> <span class="st">"#8f1402"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-8-1.png"><!-- --></p>
+<p>The red rectangle indicate the 95 percentile of the null distribution
+of the norm for each term. In this case the decomposition turns out to
+be significant for all terms, and all three design factors show a
+comparable relevance in the decomposition.</p>
+<p>In terms of the variable importance for the three factors,
+instead:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_svd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_svd.html">ASCA_svd</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">decomposition</span><span class="op">)</span></code></pre></div>
-<p>Also here the result is a list with each element holding the results of the svd of the single decomposition terms which have been performed by using the <code>prcomp</code> function of base R. As in a usual PCA analysis the amount of explained variability (square of the standard deviation) can be used to identify how many eigentrends it would be necessary to consider to present an informative representation of the overall matrix. This type of representation is known as <em>scree plot</em></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">varimp</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Variable importance: time"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_validation</span><span class="op">$</span><span class="va">varimp_qt</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"#8f1402"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">varimp</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Variable importance: treatment"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_validation</span><span class="op">$</span><span class="va">varimp_qt</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"#8f1402"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">varimp</span><span class="op">[</span>,<span class="fl">3</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Variable importance: time:treatment"</span>, border <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_validation</span><span class="op">$</span><span class="va">varimp_qt</span><span class="op">[</span>,<span class="fl">3</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"#8f1402"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-9-1.png"><!-- --></p>
+<p>As before, the red bars indicate the empirical quantile of the
+variable importance upon permutation of the design. The picture we get
+with this analysis is in line with the characteristics of the simulated
+dataset: only the first four species are significantly responding to the
+<em>time</em> factor; s5 and s6, instead are important for
+<em>treatment</em> and s7 .. s10 for the <em>interaction</em>.</p>
+<p>The following plot shows the result of the model fit assessment in
+terms of pseudo <em>R</em><sup>2</sup>:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## here we make a scree plot of the three decomposition terms</span>
-<span class="fu">map</span><span class="op">(</span><span class="va">asca0_svd</span>, <span class="op">~</span> <span class="va">.x</span><span class="op">$</span><span class="va">sdev</span> <span class="op">%&gt;%</span> <span class="fu">as_tibble</span><span class="op">(</span><span class="va">.</span>, rownames <span class="op">=</span> <span class="st">"PC"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">enframe</span><span class="op">(</span>name <span class="op">=</span> <span class="st">"term"</span>, value <span class="op">=</span> <span class="st">"data"</span><span class="op">)</span> <span class="op">%&gt;%</span>
-  <span class="co"># mutate(data = map(data,~ .x %&gt;% mutate(value = (value/sum(value))*100))) %&gt;% </span>
-  <span class="fu">unnest</span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>PC <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">PC</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="va">PC</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_col</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">PC</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">term</span>, scales <span class="op">=</span> <span class="st">"free"</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">ylab</span><span class="op">(</span><span class="st">"Variances"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
-<p>The previous plot suggests that two LVs represent good aproximation for all the three factors (actually for treatment 2 LVs are not an approximation)</p>
-<p>Let’s start with the <code>time</code> term. Its latent variables can be interpreted as latent “eigentrend” which highlights underlying general patterns shared by group of variables. The best way to highlight that is to plot the separate scores for the first two LVs as a function of the <em>time</em> design factor</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">pseudoR2</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Univariate model fit"</span>, border <span class="op">=</span> <span class="cn">NA</span>, ylab <span class="op">=</span> <span class="st">"pseudo R2"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_validation</span><span class="op">$</span><span class="va">R2_qt</span>, col <span class="op">=</span> <span class="st">"#8f1402"</span>, border <span class="op">=</span> <span class="cn">NA</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-10-1.png"><!-- --></p>
+<p>Also here the results are coherent with the design of the synthetic
+dataset: the first 10 variables shows a significant
+pseudo-<em>R</em><sup>2</sup> and this is not only indicating that they
+are significantly responding to the design, but also that the proposed
+model is capturing a large fraction of the data variability. It is also
+interesting to observe that, not unexpectedly, the univariate null
+quantiles are similar for all the 10 variables.</p>
+<p>As already discussed, the previous results can be used to restrict
+the analysis to the responsive variables. In the <code>gASCA</code>
+package the decomposition can be trimmed by using the
+<code><a href="../reference/ASCA_trim_vars.html">ASCA_trim_vars()</a></code> function:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span><span class="op">$</span><span class="va">x</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">everything</span><span class="op">(</span><span class="op">)</span>,<span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">.x</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>      <span class="co">## this is needed to compensate for computational inaccuracies</span>
-  <span class="fu">add_column</span><span class="op">(</span>time <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">time</span>, <span class="va">PC1</span>, <span class="va">PC2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"PC"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">value</span>, group <span class="op">=</span> <span class="va">name</span><span class="op">)</span>,col <span class="op">=</span> <span class="st">"steelblue"</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_hline</span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, ncol <span class="op">=</span> <span class="fl">2</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ylab</span><span class="op">(</span><span class="st">"Scores"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
-<p>The first eigentrend is characterized by a steadily increasing tendency which contrasts with the evolution of the second “U” shaped profile. As in standard pca, their loadings will tell which measured variables are mainly associated to them</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span><span class="op">$</span><span class="va">rotation</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span>rownames <span class="op">=</span> <span class="st">"species"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">species</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"s"</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">species</span>,<span class="va">PC1</span>,<span class="va">PC2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"PC"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">species</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_segment</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">species</span>, y <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">species</span>, yend <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ylab</span> <span class="op">(</span><span class="st">"Loadings"</span><span class="op">)</span><span class="op">+</span>
-   <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-15-1.png" width="700"></p>
-<p>The loadings plot indicates that s1 and s1 are highly contributing to the increasing eigentrend, while s3 and s4 mainly characterize the second LV. This is in keeping with the expected characteristics of the synthetic dataset. The real time trends of the measured values for s1 amd s3 are indeed the following.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">tibble</span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,
-       <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">time</span>, <span class="va">treatment</span>, <span class="va">s1</span>,<span class="va">s3</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"s"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">value</span>, fill <span class="op">=</span> <span class="va">treatment</span><span class="op">)</span>,
-             position <span class="op">=</span> <span class="fu">position_dodge</span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">21</span>, size <span class="op">=</span><span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">scale_fill_brewer</span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span>, name <span class="op">=</span> <span class="st">"Treatment"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, ncol <span class="op">=</span> <span class="fl">2</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Time"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span>, 
-        legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
-<p>In the case of the <code>treatment</code>, we are dealing with only two eigenvectors since the number of levels of this factor is three.</p>
-<p>Due to the limited number of levels the plots of the individual eigen-treatments highligths a differantiation between the three levels along PC1, and a separation between A/C and B along PC2.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R">
-<span class="va">asca0_svd</span><span class="op">$</span><span class="va">treatment</span><span class="op">$</span><span class="va">x</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">everything</span><span class="op">(</span><span class="op">)</span>,<span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">.x</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>      <span class="co">## this is needed to compensate for computational differences across the glm estimations</span>
-  <span class="fu">add_column</span><span class="op">(</span>treatment <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">treatment</span>, <span class="va">PC1</span>, <span class="va">PC2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"PC"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">treatment</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">treatment</span>, y <span class="op">=</span> <span class="va">value</span>, group <span class="op">=</span> <span class="va">name</span><span class="op">)</span>,col <span class="op">=</span> <span class="st">"steelblue"</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_hline</span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, ncol <span class="op">=</span> <span class="fl">1</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ylab</span><span class="op">(</span><span class="st">"Scores in response space"</span><span class="op">)</span><span class="op">+</span>
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
-<p>The same line of reasoning can be applied also to the interpretation of the LVs of the <code>time:treatment</code> factors, but the interpretation of the LV associated to the interaction terms is not straightforward. Combining two or more decomposition terms prior to SVD could be an informative workaround to the problem. In particular, combining the <code>time</code> and <code>time:treatment</code> could highlight the role of the treatment in shaping the time trends.</p>
+<code class="sourceCode R"><span><span class="va">focus_dec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_trim_vars.html">ASCA_trim_vars</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">decomposition</span>, keep <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div id="combining-terms" class="section level3">
-<h3 class="hasAnchor">
-<a href="#combining-terms" class="anchor"></a>Combining terms</h3>
-<p>The function <code>ASCA_combine_terms</code> allows the combination of different factor matrices. The function accepts as input the output of an <code>ASCA_decomposition</code> and a character vector specifying which terms should be combined.</p>
+<div class="section level2">
+<h2 id="analysis-of-the-decomposition-terms">Analysis of the decomposition terms<a class="anchor" aria-label="anchor" href="#analysis-of-the-decomposition-terms"></a>
+</h2>
+<div class="section level3">
+<h3 id="eigenvectors-and-multivariate-decomposition">Eigenvectors and Multivariate Decomposition<a class="anchor" aria-label="anchor" href="#eigenvectors-and-multivariate-decomposition"></a>
+</h3>
+<div class="section level4">
+<h4 id="time">Time<a class="anchor" aria-label="anchor" href="#time"></a>
+</h4>
+<p>Let’s now focus on the three decomposition matrices in terms of their
+multivariate latent factors. Depending on the term, these LV can be
+interpreted as “eigentrends” (for time) or “eigentreatments” (for
+treatment) and they are actually what we would like to interpret.
+Remember that the rank of the matrix associated to each factor is
+determined by the number of levels of each factor because the
+decomposition matrices are constructed with the model expected values.
+The number of LVs will be then equal to the number of factors minus
+one.</p>
+<p>As an example, this is the set of predicted values for the time
+factor of variable <code>s1</code></p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">asca0</span><span class="op">$</span><span class="va">decomposition</span><span class="op">$</span><span class="va">time</span><span class="op">[</span>,<span class="st">"s1"</span><span class="op">]</span>, ylab <span class="op">=</span> <span class="st">"I"</span>, xlab <span class="op">=</span> <span class="st">"Sample Index"</span>, pch <span class="op">=</span> <span class="fl">19</span>, col <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-12-1.png"><!-- --></p>
+<p>The presence of a limited number of constant values is coherent with
+the levels of the time factor, while the scale on the y axis shows that
+predictions are performed in the linear predictor space. Since the
+<em>time</em> factor has 5 levels the rank of the matrix will be four.
+We then expect four eigentrends. Their relative importance is
+proportional to the individual eigenvalues.</p>
+<p>The SVD decomposition of the ASCA array is performed by the
+<code>ASCA_svd</code> function.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">asca0_svd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_svd.html">ASCA_svd</a></span><span class="op">(</span><span class="va">focus_dec</span><span class="op">)</span></span></code></pre></div>
+<p>Also here the result is a list with each element holding the results
+of the svd of the single decomposition terms performed by using the
+<code>prcomp</code> function of base R. As in a usual PCA analysis, the
+amount of explained variability (square of the standard deviation) can
+be used to identify how many eigentrends are needed to present an
+informative representation of the overall matrix. This type of
+representation is known as <em>scree plot</em>.</p>
+<p>Let’s first consider the <em>time</em> factor. The following
+screeplot can be used to identify the number of relevant
+eigentrends:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span>, col <span class="op">=</span> <span class="st">"#4682b490"</span>, main <span class="op">=</span> <span class="st">"Screeplot: time"</span>, npcs <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-14-1.png"><!-- --></p>
+<p>Apparently two LVs are able to capture the global structure of the
+data. Let’s visualize the two eigentrends</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## combine two terms</span>
-<span class="va">asca0_comb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_combine_terms.html">ASCA_combine_terms</a></span><span class="op">(</span><span class="va">asca0</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"time"</span>,<span class="st">"time:treatment"</span><span class="op">)</span><span class="op">)</span>
-
-<span class="co">## perform the svd of the combined decomposition </span>
-<span class="va">asca0_comb_svd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_svd.html">ASCA_svd</a></span><span class="op">(</span><span class="va">asca0_comb</span><span class="op">$</span><span class="va">decomposition</span><span class="op">)</span></code></pre></div>
-<p>In terms of the eigenvalues of the LVs:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co">## here we use the base pscree plot</span>
-<span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span>, main <span class="op">=</span> <span class="st">"time + time:treatment"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
-<p>The rank of the matrix here is larger (10), but the major trends are still captured by the first two components. Their eigentrends are plot in the following figure:</p>
+<code class="sourceCode R"><span><span class="co">## reduce to a set of individual values compensating for potential numeric inaccuracies</span></span>
+<span><span class="va">eigentrends</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span>,</span>
+<span>                                       LV1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC1"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                       LV2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC2"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">eigentrends</span></span></code></pre></div>
+<pre><code><span><span class="co">##     time   LV1   LV2</span></span>
+<span><span class="co">## 1     t0 -2.05  0.99</span></span>
+<span><span class="co">## 31    t1 -1.02 -0.52</span></span>
+<span><span class="co">## 61    t2  0.03 -1.01</span></span>
+<span><span class="co">## 91    t3  1.07 -0.49</span></span>
+<span><span class="co">## 121   t4  1.97  1.03</span></span></code></pre>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">x</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">everything</span><span class="op">(</span><span class="op">)</span>,<span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">.x</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span>      <span class="co">## this is needed to compensate for computational inaccuracies</span>
-  <span class="fu">add_column</span><span class="op">(</span>time <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span>,
-             treatment <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://rdrr.io/r/base/unique.html">unique</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">time</span>,<span class="va">treatment</span>, <span class="va">PC1</span>, <span class="va">PC2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"PC"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">value</span>, col <span class="op">=</span> <span class="va">treatment</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_line</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">value</span>, col <span class="op">=</span> <span class="va">treatment</span>, group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interaction.html">interaction</a></span><span class="op">(</span><span class="va">name</span>,<span class="va">treatment</span><span class="op">)</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_hline</span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, col <span class="op">=</span> <span class="st">"red"</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, ncol <span class="op">=</span> <span class="fl">2</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-20-1.png" width="700"></p>
-<p>Here the time dependent interplay between time and treatment along the first component is clear. Treatment “C” is responsible of a modification in the time profile of the first eigentrend. In terms of loadings, the picture is similar to the previous one (the flip in the sign of the loadings of eig2 is the result of the sign indetermination for svd). If one focusses on eig1 (which accounts for almost the 90% of the matrix variance), s1 and s2 are almost the only contributors and this highlights the influence of <code>time</code> and <code>time:treatment</code> on the measured intensities of these two variables.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV1</span><span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">LV1</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">eigentrends</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">eigentrends</span><span class="op">$</span><span class="va">LV1</span><span class="op">)</span>, labels<span class="op">=</span><span class="va">eigentrends</span><span class="op">$</span><span class="va">time</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV2</span><span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">LV2</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">eigentrends</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"orange"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #2"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">eigentrends</span><span class="op">$</span><span class="va">LV2</span><span class="op">)</span>, labels<span class="op">=</span><span class="va">eigentrends</span><span class="op">$</span><span class="va">time</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-16-1.png"><!-- --></p>
+<p>As expected, the first eigentrend is characterized by a steady
+increase which contrasts with the pattern of the second LV with a “U”
+shaped profile. In the synthetic data the actual trend of LV2 for the
+time factor is opposite, but this simply results from the sign
+indetermination of PCA. The loadings will tell which variables are
+mainly associated to them.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">rotation</span> <span class="op">%&gt;%</span> 
-  <span class="fu">as_tibble</span><span class="op">(</span>rownames <span class="op">=</span> <span class="st">"species"</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span>species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">species</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"s"</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">species</span>,<span class="va">PC1</span>,<span class="va">PC2</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">pivot_longer</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"PC"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">species</span>, y <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span>
-  <span class="fu">geom_segment</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">species</span>, y <span class="op">=</span> <span class="fl">0</span>, xend <span class="op">=</span> <span class="va">species</span>, yend <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">facet_wrap</span><span class="op">(</span><span class="op">~</span><span class="va">name</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ylab</span> <span class="op">(</span><span class="st">"Loadings"</span><span class="op">)</span><span class="op">+</span>
-   <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
-<p>The role of S1 in determining eig1 can be seen in the original data after log transformation.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">time</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"orange"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #2"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-17-1.png"><!-- -->
+In keeping with the characteristics of the synthetic data, s1 and s2 are
+contributing strongly to the increasing eigentrend, while s3 and s4
+mainly characterize the second LV. Also the intensity of the loadings
+correctly reflects the values used in the generation of the synthetic
+dataset. Further supporting the coherence of these results, below we
+show the real time trends of the measured values for s1 and s3:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu">tibble</span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,
-       <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">counts</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="fu">starts_with</span><span class="op">(</span><span class="st">"s"</span><span class="op">)</span>, <span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">.x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">select</span><span class="op">(</span><span class="va">time</span>,<span class="va">treatment</span>,<span class="va">s1</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html">is.finite</a></span><span class="op">(</span><span class="va">s1</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
-  <span class="fu">ggplot</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">geom_point</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, y <span class="op">=</span> <span class="va">s1</span>, fill <span class="op">=</span> <span class="va">treatment</span><span class="op">)</span>,
-             position <span class="op">=</span> <span class="fu">position_dodge</span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>, pch <span class="op">=</span> <span class="fl">21</span>, size <span class="op">=</span><span class="fl">3</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">scale_fill_brewer</span><span class="op">(</span>palette <span class="op">=</span> <span class="st">"Set1"</span>, name <span class="op">=</span> <span class="st">"Treatment"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">xlab</span><span class="op">(</span><span class="st">"Time"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme_light</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Variable S1"</span><span class="op">)</span> <span class="op">+</span> 
-  <span class="fu">theme</span><span class="op">(</span>aspect.ratio <span class="op">=</span> <span class="fl">0.5</span>, 
-        legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></code></pre></div>
-<p><img src="Asca_dec_count_data_files/figure-html/unnamed-chunk-22-1.png" width="700"></p>
-<p>Here the green dots of treatment C are absent in t1 (so C is “negatively” contributing at t1), while they get larger than their blue and red counterparts in t3, t4 and - marginally- t5. Treatment C has then a steeper increasing trend, as highlighted by the first eigen-trend of the combined ASCA.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/stripchart.html" class="external-link">stripchart</a></span><span class="op">(</span><span class="va">s1</span> <span class="op">~</span> <span class="va">time</span>, data <span class="op">=</span> <span class="va">data_df</span>, vertical <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"jitter"</span>, </span>
+<span>           col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"S1"</span>, ylab <span class="op">=</span> <span class="st">"Counts"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/stripchart.html" class="external-link">stripchart</a></span><span class="op">(</span><span class="va">s3</span> <span class="op">~</span> <span class="va">time</span>, data <span class="op">=</span> <span class="va">data_df</span>, vertical <span class="op">=</span> <span class="cn">TRUE</span>, pch <span class="op">=</span> <span class="fl">1</span>, method <span class="op">=</span> <span class="st">"jitter"</span>, </span>
+<span>           col <span class="op">=</span> <span class="st">"orange"</span>, main <span class="op">=</span> <span class="st">"S3"</span>, ylab <span class="op">=</span> <span class="st">"Counts"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-18-1.png"><!-- --></p>
+</div>
+<div class="section level4">
+<h4 id="treatment">Treatment<a class="anchor" aria-label="anchor" href="#treatment"></a>
+</h4>
+<p>The treatment factor has 3 levels so a maximum of 2 LVs is expected
+to be relevant. As before, the screeplot will highlight the individual
+contribution of the two eigentreatments</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">treatment</span>, col <span class="op">=</span> <span class="st">"#4682b490"</span>, main <span class="op">=</span> <span class="st">"Screeplot: treatment"</span>, npcs <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-19-1.png"><!-- --></p>
+<p>Nonetheless, as expected, only one LV is relevant here. In the
+following plot the profile of the eigentreatment and its loadings are
+shown:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## reduce to a set of individual values compensating for potential numeric inaccuracies</span></span>
+<span><span class="va">eigentreatments</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span>treatment <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span>,</span>
+<span>                                       LV1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">treatment</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC1"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">eigentreatments</span></span></code></pre></div>
+<pre><code><span><span class="co">##    treatment   LV1</span></span>
+<span><span class="co">## 1         B1 -2.00</span></span>
+<span><span class="co">## 11        B2  1.49</span></span>
+<span><span class="co">## 21        B3  0.50</span></span></code></pre>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">LV1</span><span class="op">~</span><span class="va">treatment</span>, data <span class="op">=</span> <span class="va">eigentreatments</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Eigentreatment #1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">treatment</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #1"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-21-1.png"><!-- --></p>
+<p>As before, this is perfectly in line with the characteristics of the
+synthetic dataset.</p>
+</div>
+<div class="section level4">
+<h4 id="interaction">Interaction<a class="anchor" aria-label="anchor" href="#interaction"></a>
+</h4>
+<p>The last element of the decomposition is the interaction. Here the
+number of possible LVs is large, let’s start with the screeplot</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">`time:treatment`</span>, col <span class="op">=</span> <span class="st">"#4682b490"</span>, main <span class="op">=</span> <span class="st">"Screeplot: interaction"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-22-1.png"><!-- --></p>
+<p>Here, 2 components are able to capture almost all the variance, with
+the first eigenvector showing a prominent role. Let’s look to the shape
+of the two components:</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## reduce to a set of individual values compensating for potential numeric inaccuracies</span></span>
+<span><span class="va">eigentrends_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span>time <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">time</span>,</span>
+<span>                                           treatment <span class="op">=</span> <span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span><span class="op">$</span><span class="va">treatment</span>,</span>
+<span>                                       LV1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">`time:treatment`</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC1"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                       LV2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">`time:treatment`</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC2"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">eigentrends_int</span></span></code></pre></div>
+<pre><code><span><span class="co">##     time treatment   LV1   LV2</span></span>
+<span><span class="co">## 1     t0        B1 -1.16  0.21</span></span>
+<span><span class="co">## 11    t0        B2 -1.16 -0.28</span></span>
+<span><span class="co">## 21    t0        B3  2.32  0.06</span></span>
+<span><span class="co">## 31    t1        B1 -0.60 -0.18</span></span>
+<span><span class="co">## 41    t1        B2 -0.61  0.34</span></span>
+<span><span class="co">## 51    t1        B3  1.21 -0.16</span></span>
+<span><span class="co">## 61    t2        B1  0.62  0.16</span></span>
+<span><span class="co">## 71    t2        B2  0.58 -0.39</span></span>
+<span><span class="co">## 81    t2        B3 -1.20  0.24</span></span>
+<span><span class="co">## 91    t3        B1  1.17 -0.16</span></span>
+<span><span class="co">## 101   t3        B2  1.21  0.30</span></span>
+<span><span class="co">## 111   t3        B3 -2.38 -0.13</span></span>
+<span><span class="co">## 121   t4        B1 -0.02 -0.03</span></span>
+<span><span class="co">## 131   t4        B2 -0.03  0.04</span></span>
+<span><span class="co">## 141   t4        B3  0.05 -0.01</span></span></code></pre>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">[</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B1"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV1</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"orange"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #1"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2.5</span>,<span class="fl">2.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">[</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B2"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV1</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">[</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B3"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV1</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"red"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">[</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B1"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV2</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"orange"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #2"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.5</span>,<span class="fl">1.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">[</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B2"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV2</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">[</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B3"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV2</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"red"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">eigentrends_int</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomright"</span>, legend<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treat B1"</span>, <span class="st">"Treat B2"</span>, <span class="st">"Treat B3"</span><span class="op">)</span>,</span>
+<span>       col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"orange"</span>,<span class="st">"steelblue"</span>,<span class="st">"red"</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fl">1</span>, bty <span class="op">=</span> <span class="st">"n"</span>, cex <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></code></pre></div>
+<p>Also in this case, results are in line with the characteristics of
+the synthetic data. The larger eigentrend shows a different temporal
+trend of B3 in comparison to the other two treatments. LV2, instead,
+differentiates B2 from B1 and B3. Interestingly, both the magnitude of
+the scores and the variable importance indicate that the first
+eigentrend has a larger impact on the structure of the data. In terms of
+loadings:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">`time:treatment`</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_svd</span><span class="op">$</span><span class="va">`time:treatment`</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"orange"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #2"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-25-1.png"><!-- --></p>
+<p>The reconstruction follows the structure of the data, with the
+exception being the direction (sign) of the effect, due to the sign
+indetermination of PCA.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="combining-terms">Combining terms<a class="anchor" aria-label="anchor" href="#combining-terms"></a>
+</h3>
+<p>The function <code>ASCA_combine_terms</code> allows the combination
+of different factor matrices. The function accepts as input the output
+of <code>ASCA_decomposition</code> and a character vector specifying
+which terms should be combined.</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## combine two terms</span></span>
+<span><span class="va">asca0_comb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_combine_terms.html">ASCA_combine_terms</a></span><span class="op">(</span><span class="va">asca0</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>,<span class="st">"time:treatment"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="co">## perform the svd of the combined decomposition removing unresponsive variables</span></span>
+<span><span class="va">asca0_comb_svd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ASCA_svd.html">ASCA_svd</a></span><span class="op">(</span><span class="fu"><a href="../reference/ASCA_trim_vars.html">ASCA_trim_vars</a></span><span class="op">(</span><span class="va">asca0_comb</span><span class="op">$</span><span class="va">decomposition</span>, keep <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Let’s now focus on the LVs of the combined terms.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## here we use the base scree plot</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span>, main <span class="op">=</span> <span class="st">"time + time:treatment"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-27-1.png"><!-- --></p>
+<p>The screeplot shows that the structure of the combined term is well
+characterized by three latent variables which are shown in the following
+plot:</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## reduce to a set of individual values compensating for potential numeric inaccuracies</span></span>
+<span><span class="va">eigencomb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind.data.frame</a></span><span class="op">(</span><span class="va">synth_count_data</span><span class="op">$</span><span class="va">design</span>,</span>
+<span>                                       LV1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC1"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                       LV2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC2"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span>,</span>
+<span>                                       LV3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="st">"PC3"</span><span class="op">]</span>,<span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">eigencomb</span></span></code></pre></div>
+<pre><code><span><span class="co">##     time treatment   LV1   LV2   LV3</span></span>
+<span><span class="co">## 1     t0        B1 -2.18 -1.04  0.94</span></span>
+<span><span class="co">## 11    t0        B2 -2.21 -1.03  1.02</span></span>
+<span><span class="co">## 21    t0        B3 -1.74  2.42  1.01</span></span>
+<span><span class="co">## 31    t1        B1 -1.12 -0.47 -0.56</span></span>
+<span><span class="co">## 41    t1        B2 -1.04 -0.48 -0.51</span></span>
+<span><span class="co">## 51    t1        B3 -0.88  1.33 -0.49</span></span>
+<span><span class="co">## 61    t2        B1  0.20  0.63 -0.97</span></span>
+<span><span class="co">## 71    t2        B2  0.04  0.60 -1.06</span></span>
+<span><span class="co">## 81    t2        B3 -0.16 -1.17 -1.00</span></span>
+<span><span class="co">## 91    t3        B1  1.12  1.08 -0.50</span></span>
+<span><span class="co">## 101   t3        B2  1.21  1.10 -0.43</span></span>
+<span><span class="co">## 111   t3        B3  0.85 -2.47 -0.54</span></span>
+<span><span class="co">## 121   t4        B1  1.97 -0.19  1.10</span></span>
+<span><span class="co">## 131   t4        B2  2.00 -0.19  0.98</span></span>
+<span><span class="co">## 141   t4        B3  1.92 -0.11  1.02</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B1"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV1</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"orange"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #1"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.5</span>,<span class="fl">2.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B2"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV1</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B3"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV1</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"red"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"bottomright"</span>, legend<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treat B1"</span>, <span class="st">"Treat B2"</span>, <span class="st">"Treat B3"</span><span class="op">)</span>,</span>
+<span>       col<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"orange"</span>,<span class="st">"steelblue"</span>,<span class="st">"red"</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fl">1</span>, bty <span class="op">=</span> <span class="st">"n"</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B1"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV2</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"orange"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #2"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.5</span>,<span class="fl">2.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B2"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV2</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B3"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV2</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"red"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B1"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">LV3</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>     xaxt <span class="op">=</span> <span class="st">'n'</span>, type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"orange"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span>, main <span class="op">=</span> <span class="st">"Eigentrend #3"</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3.5</span>,<span class="fl">2.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B2"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV3</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">[</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">treatment</span> <span class="op">==</span> <span class="st">"B3"</span>,<span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">LV3</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                                                  type <span class="op">=</span> <span class="st">"b"</span>, col <span class="op">=</span> <span class="st">"red"</span>, pch <span class="op">=</span> <span class="fl">19</span>, xlab <span class="op">=</span> <span class="st">"time"</span>, cex <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">1</span>, at<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">eigencomb</span><span class="op">$</span><span class="va">time</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>These are, instead, the plots of the loadings:</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #2"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/barplot.html" class="external-link">barplot</a></span><span class="op">(</span><span class="va">asca0_comb_svd</span><span class="op">$</span><span class="va">`time+time:treatment`</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">3</span><span class="op">]</span>, col <span class="op">=</span> <span class="st">"steelblue"</span>, main <span class="op">=</span> <span class="st">"Loadingsplot: eigentrend #3"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="src/Asca_dec_count_data_files/figure-gfm/unnamed-chunk-30-1.png"><!-- --></p>
+<p>coherently with what was observed for the <em>time</em> factor, the
+first LV of the combined decomposition shows a steady increase which is
+now modulated by treatment B3 in the interaction term. The inspection of
+the loadings supports this interpretation, s1 and s2 are indeed - by
+design - the species showing an increase over time. s7 and s8 are also
+partially contributing to this trend and their contribution
+differentiates B3 from B1 and B2. LV2 turns out to be similar to LV1 of
+the interaction term discussed previously. Similarly, s7 and s8 are the
+most influential variables, but now a residual contribution of s1 and s2
+is also visible, which accounts for the slight overall time trend
+visible in the three treatment traces. The last LV is mirroring the
+trend visible in the LV2 of the <em>time</em> factor, this is clearly
+confirmed from the loadings plot.</p>
 </div>
 </div>
   </div>
@@ -549,11 +705,13 @@ R^{2}_{pseudo} = 1 - \frac{deviance_{residuals}}{deviance_{null}}
 
 
       <footer><div class="copyright">
-  <p>Developed by Pietro Franceschi.</p>
+  <p></p>
+<p>Developed by Pietro Franceschi.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer>
@@ -561,6 +719,8 @@ R^{2}_{pseudo} = 1 - \frac{deviance_{residuals}}{deviance_{null}}
 
   
 
+
+  
 
   </body>
 </html>

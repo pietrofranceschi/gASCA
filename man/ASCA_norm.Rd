@@ -4,16 +4,17 @@
 \alias{ASCA_norm}
 \title{ASCA_norm}
 \usage{
-ASCA_norm(m, linkinv = identity)
+ASCA_norm(m, ftrans = identity)
 }
 \arguments{
-\item{m}{}
+\item{m}{the matrix/vector}
 
-\item{linkinv}{}
+\item{ftrans}{the function which will be applied to the input before calculating the norm}
 }
 \value{
-
+the norm of the matrix/vector
 }
 \description{
-ASCA_norm
+The function calculates the norm of a vector (standatd norm) or of a matrix (L2 norm) 
+after the transformation by f_trans
 }

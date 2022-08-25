@@ -4,17 +4,17 @@
 \alias{ASCA_get_varimp}
 \title{ASCA_get_varimp}
 \usage{
-ASCA_get_varimp(termlist, linkinv)
+ASCA_get_varimp(termlist, ftrans = identity)
 }
 \arguments{
 \item{termlist}{The list of matrices holding the results of an ASCA decomposition}
 
-\item{invlink}{The inverse link function to be applied to back transform the vectors}
+\item{ftrans}{The function which will be applied to the input before calculating the norm}
 }
 \value{
-a matrix with the variable importance for each term (see \link[ASCA]{ASCA_decompose})
+a matrix with the variable importance for each term (see \link[gASCA]{ASCA_decompose})
 }
 \description{
 The function calculates the variable importance from the decomposition array. 
-See \link[ASCA]{ASCA_decompose} for additional details on how the variable importance is calculated
+See \link[gASCA]{ASCA_decompose} for additional details on how the variable importance is calculated
 }

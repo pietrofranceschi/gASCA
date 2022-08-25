@@ -1,7 +1,11 @@
-pandoc: 2.14.0.3
-pkgdown: 1.6.1
+pandoc: '2.18'
+pkgdown: 2.0.6
 pkgdown_sha: ~
 articles:
   Asca_dec_count_data: Asca_dec_count_data.html
-last_built: 2022-03-22T14:54Z
+  Asca_dec_count_data_tidy: Asca_dec_count_data_tidy.html
+  BBS_data_preparation: BBS_data_preparation.html
+  BBS_gASCA_analysis: BBS_gASCA_analysis.html
+  synthetic_dataset: synthetic_dataset.html
+last_built: 2022-08-25T11:18Z
 

@@ -4,7 +4,7 @@
 \alias{ASCA_permutation}
 \title{ASCA_permutation}
 \usage{
-ASCA_permutation(asca, turns = 500, qt = 0.95)
+ASCA_permutation(asca, turns = 100, qt = 0.95)
 }
 \arguments{
 \item{asca}{an object of class \code{ASCA_decomposition}}

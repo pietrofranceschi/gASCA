@@ -7,8 +7,8 @@
 \format{
 a list with two components:
 \describe{
-\item{counts}{a matrix with the counts (45x10)}
-\item{design}{a data.frame with the designh factors}
+\item{counts}{a matrix with the counts (150x15)}
+\item{design}{a data.frame with the design factors}
 ...
 }
 }
@@ -16,20 +16,18 @@ a list with two components:
 synth_count_data
 }
 \description{
-A dataset mimicking the results of a counting experiments of 10 variables over 45 samples.
+A dataset mimicking the results of a counting experiments of 15 variables over 150 samples.
+15 count variables are obtained as a function of 3 different treatments at 5 points in time.
+These variables could represent, for instance, count data from 10 different invertebrate species found on plants at
+Time (A)  0, 1, 2, 3, 4 after the plants have been treated with one of three treatments (B1, B2, B3).
+For each combination of time and treatment, K = 10 replicates (k = 1...K) were simulated.
 
-Design:
+In particular.
 \itemize{
-\item 5 timepoints;
-\item 3 treatments ;
-\item 10 replicates
-}
-
-The variables were created from a two latent variable model which were "projected" on the the final variables. In details
-\itemize{
-\item s1,s2,s3,s4 respond to the "time" factor. s1 and s2 contribute to the first latent factor, s3 and s4 to the second
-\item s5,s6  respond to the "treatment" factor
-\item s1 and s2 respond also to the interaction term "time:treatment". In other words, for them the effect of treatment depends on time.
+\item Two principal components will be used to describe the variation in matrix H_A (time), he variation described by the first component will be only present in the first two variables, while the variation of the second component will be only present in variables 3 and 4.
+\item One principal component will be used to describe the treatment effect in matrix $H_{B}$ (treatment) and this variation was only present in variables 5 and 6.
+\item Two components will be used for the interaction effect in matrix HAB: PC1 was only active in variables 7 and 8, while PC2 variation, which was only assigned to found in variables 9 and 10.
+\item Five additional variables not responding to the design were added to the dataset
 }
 }
 \keyword{datasets}

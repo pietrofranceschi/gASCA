@@ -28,17 +28,17 @@ a list with the full outcomes of the decomposition with the following elements
 \itemize{
 \item decomposition: a list holding the results of the decomposition
 \item mu: a vector with the constant terms of the univariate models
-\item residuals: a matrix holding the model residuals
+\item residuals: a matrix holding the model residuals. Their type is stored in the \code{res_type} element.
 \item prediction:  the matrix with the predicted values in the linear predictor space
 \item pseudoR2: a parameter to assess the goodness of fit for the model on each variable.
-\item glm_par: a list with the parameters used for modeling
+\item glm_par: a list with the parameters used for modelling
 \item res_type: the type of residuals
 \item varimp: the importance of the individual variables in the decomposition terms
 \item terms_L2: the L2 norm of the individual terms back transformed in the response space
 \item d: a data.frame with the design
 \item x: a data.frame with the initial data
 \item f: the string defining the decomposition
-\item combined: a vector holding the combined terms
+\item combined: a vector holding the combined terms ()
 \item invlink: the inverse of the link function used in the glm fitting
 }
 }
@@ -46,19 +46,20 @@ a list with the full outcomes of the decomposition with the following elements
 This function performs the full ASCA decomposition
 }
 \details{
-The ASCA decomposition of a data matrix is performed by using Generalized Linear Models to perform
-the estimation of the univariate expected values. The use of GLM's allows the extension of the method to non normal data
+The ASCA decomposition of a data matrix is performed by using Generalized Linear Models
+to estimate univariate expected values. The use of GLM's allows the extension of the method to non normal data
 and unbalanced designs.
 This function performs only the decomposition without the SVD, which have to be performed by \code{ASCA_svd}.
-The quality of the model for each variable is assessed calculating the \code{pseudoR2}, which is defined as:
+The level of fit for each variable is assessed calculating the \code{pseudoR2}, which is defined as:
 
 \deqn{1-residual_deviance/null_deviance}
 
 The variable importance element stores a measure of the importance of each variable \eqn{c} for each term calculated
-as the norm of each column back transformed in the response space. This is done to reduce the contribution of
-small expected values to the overall norm in the presence of log links. In this case, expected values close to zero
-are transformed into large negative values in the linear predictor space, so, paradoxically, the variable importance
-is larger when the expected values are smaller or in presence of large fraction of zeroes.
+as the norm of each column. L2 norm is also calculated for each decomposition term.
+
+It is important to highlight that in the case of count data with large fraction of zeroes the variable importance and the
+term L2 norms cannot be considered as reliable measure of importance because in presence of log links very low expected values are associated to
+very large negative values in the linear predictor space.
 }
 \examples{
 ## load the data

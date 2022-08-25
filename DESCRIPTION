@@ -1,15 +1,14 @@
 Package: gASCA
 Type: Package
 Title: glm based ANOVA – Simultaneous Component Analysis (ASCA)
-Version: 0.5
+Version: 1.0
 Authors@R: person("Pietro", "Franceschi", email = "pietro.franceschi@fmach.it",
                   role = c("aut", "cre"))
 Maintainer: The package maintainer <pietro.franceschi@fmach.it>
-Description: General implementation of ASCA using glm for the matrix decomposition.
+Description: General implementation of ASCA using generalized linear modeling for the matrix decomposition.
 License: GNU General Public License version 3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
-Depends: R (>= 4.1.0), parallel, Matrix, stats, graphics
-VignetteBuilder: knitr
-Suggests: knitr, rmarkdown
+RoxygenNote: 7.2.0
+Depends: R (>= 4.1.0), parallel, stats, graphics
+Import: parallel

@@ -7,16 +7,16 @@
 ASCA_svd(decomposition, ...)
 }
 \arguments{
-\item{decomposition}{the decomposition list produced by  \code{ASCA_decompose}.}
+\item{decomposition}{the decomposition list produced by  `ASCA_decompose`.}
 
-\item{...}{additional parameters to be passed to \code{prcomp}}
+\item{...}{additional parameters to be passed to `prcomp`}
 }
 \value{
-a list with the results of the SVD decomposition for each term. Each element is the output of a
-\code{prcomp}
+a list with the results of the SVD decomposition for each term. Each element is the output of a  
+`prcomp` call.
 }
 \description{
-ASCA_svd
+This function is designed to perform the term-wise decomposition by R base `prcomp`
 }
 \examples{
 ## load the data
